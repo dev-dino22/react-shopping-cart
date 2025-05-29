@@ -12184,7 +12184,6 @@ function CartCheckList() {
   const formatPrice = (price) => {
     return `${price.toLocaleString()}원`;
   };
-  console.log(selectionMap);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Container$2, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(CheckedAll, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
