@@ -9275,12 +9275,12 @@ function createBrowserURLImpl(to, isAbsolute = false) {
   }
   return new URL(href2, base);
 }
-function matchRoutes(routes, locationArg, basename2 = "/") {
-  return matchRoutesImpl(routes, locationArg, basename2, false);
+function matchRoutes(routes, locationArg, basename = "/") {
+  return matchRoutesImpl(routes, locationArg, basename, false);
 }
-function matchRoutesImpl(routes, locationArg, basename2, allowPartial) {
+function matchRoutesImpl(routes, locationArg, basename, allowPartial) {
   let location = typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
-  let pathname = stripBasename(location.pathname || "/", basename2);
+  let pathname = stripBasename(location.pathname || "/", basename);
   if (pathname == null) {
     return null;
   }
@@ -9528,13 +9528,13 @@ function decodePath(value) {
     return value;
   }
 }
-function stripBasename(pathname, basename2) {
-  if (basename2 === "/")
+function stripBasename(pathname, basename) {
+  if (basename === "/")
     return pathname;
-  if (!pathname.toLowerCase().startsWith(basename2.toLowerCase())) {
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
     return null;
   }
-  let startIndex2 = basename2.endsWith("/") ? basename2.length - 1 : basename2.length;
+  let startIndex2 = basename.endsWith("/") ? basename.length - 1 : basename.length;
   let nextChar = pathname.charAt(startIndex2);
   if (nextChar && nextChar !== "/") {
     return null;
@@ -9685,11 +9685,11 @@ function useHref(to, { relative } = {}) {
     // router loaded. We can help them understand how to avoid that.
     `useHref() may be used only in the context of a <Router> component.`
   );
-  let { basename: basename2, navigator: navigator2 } = reactExports.useContext(NavigationContext);
+  let { basename, navigator: navigator2 } = reactExports.useContext(NavigationContext);
   let { hash: hash2, pathname, search } = useResolvedPath(to, { relative });
   let joinedPathname = pathname;
-  if (basename2 !== "/") {
-    joinedPathname = pathname === "/" ? basename2 : joinPaths([basename2, pathname]);
+  if (basename !== "/") {
+    joinedPathname = pathname === "/" ? basename : joinPaths([basename, pathname]);
   }
   return navigator2.createHref({ pathname: joinedPathname, search, hash: hash2 });
 }
@@ -9724,7 +9724,7 @@ function useNavigateUnstable() {
     `useNavigate() may be used only in the context of a <Router> component.`
   );
   let dataRouterContext = reactExports.useContext(DataRouterContext);
-  let { basename: basename2, navigator: navigator2 } = reactExports.useContext(NavigationContext);
+  let { basename, navigator: navigator2 } = reactExports.useContext(NavigationContext);
   let { matches } = reactExports.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
   let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
@@ -9747,8 +9747,8 @@ function useNavigateUnstable() {
         locationPathname,
         options.relative === "path"
       );
-      if (dataRouterContext == null && basename2 !== "/") {
-        path.pathname = path.pathname === "/" ? basename2 : joinPaths([basename2, path.pathname]);
+      if (dataRouterContext == null && basename !== "/") {
+        path.pathname = path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
       }
       (!!options.replace ? navigator2.replace : navigator2.push)(
         path,
@@ -9757,7 +9757,7 @@ function useNavigateUnstable() {
       );
     },
     [
-      basename2,
+      basename,
       navigator2,
       routePathnamesJson,
       locationPathname,
@@ -10175,15 +10175,15 @@ function Router({
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>. You should never have more than one in your app.`
   );
-  let basename2 = basenameProp.replace(/^\/*/, "/");
+  let basename = basenameProp.replace(/^\/*/, "/");
   let navigationContext = reactExports.useMemo(
     () => ({
-      basename: basename2,
+      basename,
       navigator: navigator2,
       static: staticProp,
       future: {}
     }),
-    [basename2, navigator2, staticProp]
+    [basename, navigator2, staticProp]
   );
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -10196,7 +10196,7 @@ function Router({
     key = "default"
   } = locationProp;
   let locationContext = reactExports.useMemo(() => {
-    let trailingPathname = stripBasename(pathname, basename2);
+    let trailingPathname = stripBasename(pathname, basename);
     if (trailingPathname == null) {
       return null;
     }
@@ -10210,10 +10210,10 @@ function Router({
       },
       navigationType
     };
-  }, [basename2, pathname, search, hash2, state, key, navigationType]);
+  }, [basename, pathname, search, hash2, state, key, navigationType]);
   warning(
     locationContext != null,
-    `<Router basename="${basename2}"> is not able to match the URL "${pathname}${search}${hash2}" because it does not start with the basename, so the <Router> won't render anything.`
+    `<Router basename="${basename}"> is not able to match the URL "${pathname}${search}${hash2}" because it does not start with the basename, so the <Router> won't render anything.`
   );
   if (locationContext == null) {
     return null;
@@ -10329,7 +10329,7 @@ function getFormEncType(encType) {
   }
   return encType;
 }
-function getFormSubmissionInfo(target, basename2) {
+function getFormSubmissionInfo(target, basename) {
   let method;
   let action;
   let encType;
@@ -10337,7 +10337,7 @@ function getFormSubmissionInfo(target, basename2) {
   let body;
   if (isFormElement(target)) {
     let attr = target.getAttribute("action");
-    action = attr ? stripBasename(attr, basename2) : null;
+    action = attr ? stripBasename(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
     encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
     formData = new FormData(target);
@@ -10349,7 +10349,7 @@ function getFormSubmissionInfo(target, basename2) {
       );
     }
     let attr = target.getAttribute("formaction") || form.getAttribute("action");
-    action = attr ? stripBasename(attr, basename2) : null;
+    action = attr ? stripBasename(attr, basename) : null;
     method = target.getAttribute("formmethod") || form.getAttribute("method") || defaultMethod;
     encType = getFormEncType(target.getAttribute("formenctype")) || getFormEncType(form.getAttribute("enctype")) || defaultEncType;
     formData = new FormData(form, target);
@@ -10534,7 +10534,7 @@ function dedupeLinkDescriptors(descriptors, preloads) {
 }
 Object.getOwnPropertyNames(Object.prototype).sort().join("\0");
 var NO_BODY_STATUS_CODES = /* @__PURE__ */ new Set([100, 101, 204, 205]);
-function singleFetchUrl(reqUrl, basename2) {
+function singleFetchUrl(reqUrl, basename) {
   let url = typeof reqUrl === "string" ? new URL(
     reqUrl,
     // This can be called during the SSR flow via PrefetchPageLinksImpl so
@@ -10543,8 +10543,8 @@ function singleFetchUrl(reqUrl, basename2) {
   ) : reqUrl;
   if (url.pathname === "/") {
     url.pathname = "_root.data";
-  } else if (basename2 && stripBasename(url.pathname, basename2) === "/") {
-    url.pathname = `${basename2.replace(/\/$/, "")}/_root.data`;
+  } else if (basename && stripBasename(url.pathname, basename) === "/") {
+    url.pathname = `${basename.replace(/\/$/, "")}/_root.data`;
   } else {
     url.pathname = `${url.pathname.replace(/\/$/, "")}.data`;
   }
@@ -10682,7 +10682,7 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
-  let { basename: basename2 } = useDataRouterContext2();
+  let { basename } = useDataRouterContext2();
   let { loaderData, matches } = useDataRouterStateContext();
   let newMatchesForData = reactExports.useMemo(
     () => getNewMatchesForLinks(
@@ -10729,7 +10729,7 @@ function PrefetchPageLinksImpl({
     if (routesParams.size === 0) {
       return [];
     }
-    let url = singleFetchUrl(page, basename2);
+    let url = singleFetchUrl(page, basename);
     if (foundOptOutRoute && routesParams.size > 0) {
       url.searchParams.set(
         "_routes",
@@ -10738,7 +10738,7 @@ function PrefetchPageLinksImpl({
     }
     return [url.pathname + url.search];
   }, [
-    basename2,
+    basename,
     loaderData,
     location,
     manifest,
@@ -10777,7 +10777,7 @@ try {
 } catch (e2) {
 }
 function BrowserRouter({
-  basename: basename2,
+  basename,
   children,
   window: window2
 }) {
@@ -10800,7 +10800,7 @@ function BrowserRouter({
   return /* @__PURE__ */ reactExports.createElement(
     Router,
     {
-      basename: basename2,
+      basename,
       children,
       location: state.location,
       navigationType: state.action,
@@ -10824,7 +10824,7 @@ var Link = reactExports.forwardRef(
     viewTransition,
     ...rest
   }, forwardedRef) {
-    let { basename: basename2 } = reactExports.useContext(NavigationContext);
+    let { basename } = reactExports.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX2.test(to);
     let absoluteHref;
     let isExternal = false;
@@ -10834,7 +10834,7 @@ var Link = reactExports.forwardRef(
         try {
           let currentUrl = new URL(window.location.href);
           let targetUrl = to.startsWith("//") ? new URL(currentUrl.protocol + to) : new URL(to);
-          let path = stripBasename(targetUrl.pathname, basename2);
+          let path = stripBasename(targetUrl.pathname, basename);
           if (targetUrl.origin === currentUrl.origin && path != null) {
             to = path + targetUrl.search + targetUrl.hash;
           } else {
@@ -10902,7 +10902,7 @@ var NavLink = reactExports.forwardRef(
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
     let routerState = reactExports.useContext(DataRouterStateContext);
-    let { navigator: navigator2, basename: basename2 } = reactExports.useContext(NavigationContext);
+    let { navigator: navigator2, basename } = reactExports.useContext(NavigationContext);
     let isTransitioning = routerState != null && // Conditional usage is OK here because the usage of a data router is static
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useViewTransitionState(path) && viewTransition === true;
@@ -10914,8 +10914,8 @@ var NavLink = reactExports.forwardRef(
       nextLocationPathname = nextLocationPathname ? nextLocationPathname.toLowerCase() : null;
       toPathname = toPathname.toLowerCase();
     }
-    if (nextLocationPathname && basename2) {
-      nextLocationPathname = stripBasename(nextLocationPathname, basename2) || nextLocationPathname;
+    if (nextLocationPathname && basename) {
+      nextLocationPathname = stripBasename(nextLocationPathname, basename) || nextLocationPathname;
     }
     const endSlashPosition = toPathname !== "/" && toPathname.endsWith("/") ? toPathname.length - 1 : toPathname.length;
     let isActive = locationPathname === toPathname || !end && locationPathname.startsWith(toPathname) && locationPathname.charAt(endSlashPosition) === "/";
@@ -11060,13 +11060,13 @@ function useSubmit() {
     "useSubmit"
     /* UseSubmit */
   );
-  let { basename: basename2 } = reactExports.useContext(NavigationContext);
+  let { basename } = reactExports.useContext(NavigationContext);
   let currentRouteId = useRouteId();
   return reactExports.useCallback(
     async (target, options = {}) => {
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
-        basename2
+        basename
       );
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
@@ -11093,11 +11093,11 @@ function useSubmit() {
         });
       }
     },
-    [router, basename2, currentRouteId]
+    [router, basename, currentRouteId]
   );
 }
 function useFormAction(action, { relative } = {}) {
-  let { basename: basename2 } = reactExports.useContext(NavigationContext);
+  let { basename } = reactExports.useContext(NavigationContext);
   let routeContext = reactExports.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
   let [match2] = routeContext.matches.slice(-1);
@@ -11118,8 +11118,8 @@ function useFormAction(action, { relative } = {}) {
   if ((!action || action === ".") && match2.route.index) {
     path.search = path.search ? path.search.replace(/^\?/, "?index&") : "?index";
   }
-  if (basename2 !== "/") {
-    path.pathname = path.pathname === "/" ? basename2 : joinPaths([basename2, path.pathname]);
+  if (basename !== "/") {
+    path.pathname = path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
   return createPath(path);
 }
@@ -11129,7 +11129,7 @@ function useViewTransitionState(to, opts = {}) {
     vtContext != null,
     "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  Did you accidentally import `RouterProvider` from `react-router`?"
   );
-  let { basename: basename2 } = useDataRouterContext3(
+  let { basename } = useDataRouterContext3(
     "useViewTransitionState"
     /* useViewTransitionState */
   );
@@ -11137,8 +11137,8 @@ function useViewTransitionState(to, opts = {}) {
   if (!vtContext.isTransitioning) {
     return false;
   }
-  let currentPath = stripBasename(vtContext.currentLocation.pathname, basename2) || vtContext.currentLocation.pathname;
-  let nextPath = stripBasename(vtContext.nextLocation.pathname, basename2) || vtContext.nextLocation.pathname;
+  let currentPath = stripBasename(vtContext.currentLocation.pathname, basename) || vtContext.currentLocation.pathname;
+  let nextPath = stripBasename(vtContext.nextLocation.pathname, basename) || vtContext.nextLocation.pathname;
   return matchPath(path.pathname, nextPath) != null || matchPath(path.pathname, currentPath) != null;
 }
 /* @__PURE__ */ new Set([
@@ -12449,13 +12449,17 @@ const CheckoutButton = newStyled.button`
   cursor: ${({ isDisabled }) => isDisabled ? "not-allowed" : "pointer"};
   border-radius: 0px;
 `;
-const isLocalhost = window.location.hostname === "localhost";
-const basename = isLocalhost ? "/" : "/react-shopping-cart";
 function App() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Global, { styles: reset }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/", element: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {}) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Route,
+        {
+          path: `${"/react-shopping-cart/"}/`,
+          element: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {})
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/order-confirm", element: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderConfirmPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         Route,
