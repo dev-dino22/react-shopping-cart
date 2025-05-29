@@ -12452,14 +12452,8 @@ const CheckoutButton = newStyled.button`
 function App() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Global, { styles: reset }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Route,
-        {
-          path: `${"/react-shopping-cart/"}/`,
-          element: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {})
-        }
-      ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename: `${"/react-shopping-cart/"}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/", element: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/order-confirm", element: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderConfirmPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         Route,
