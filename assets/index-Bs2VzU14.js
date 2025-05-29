@@ -11941,20 +11941,32 @@ const OrderConfirmPage = () => {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Container$3, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Flex, { justifyContent: "center", alignItems: "center", gap: "lg", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(InfoTitle, { children: "주문 확인" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(Description, { children: [
-          "총 ",
-          typeCount,
-          "종류의 상품 ",
-          totalCount,
-          "개를 주문합니다."
-        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Description,
+          {
+            "aria-label": `총 ${typeCount}종류의 상품 ${totalCount}개를 주문합니다.`,
+            children: [
+              "총 ",
+              typeCount,
+              "종류의 상품 ",
+              totalCount,
+              "개를 주문합니다."
+            ]
+          }
+        ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(Description, { children: "최종 결제 금액을 확인해 확인해 주세요." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Subtitle, { children: "총 결제 금액" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(InfoTitle, { children: [
-        totalPrice.toLocaleString(),
-        "원"
-      ] })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        InfoTitle,
+        {
+          "aria-label": `총 결제 금액은 ${totalPrice.toLocaleString()}원 입니다.`,
+          children: [
+            totalPrice.toLocaleString(),
+            "원"
+          ]
+        }
+      )
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(PayButton, { isDisabled: true, disabled: true, children: "결제하기" })
   ] });
@@ -11984,8 +11996,8 @@ const PayButton = newStyled.button`
   cursor: ${({ isDisabled }) => isDisabled ? "not-allowed" : "pointer"};
   border-radius: 0px;
 `;
-const CheckBox = ({ isChecked, onToggle }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(CheckButton, { isChecked, onClick: onToggle, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+const CheckBox = ({ isChecked, onToggle, ...props }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CheckButton, { isChecked, onClick: onToggle, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
     "svg",
     {
       width: "12",
@@ -12179,7 +12191,9 @@ function CartCheckList() {
         CheckBox,
         {
           isChecked: isSelectAll,
-          onToggle: () => handleSelectAll()
+          onToggle: () => handleSelectAll(),
+          role: "cart-item-all-checkbox",
+          "aria-checked": isSelectAll
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "전체 선택" })
@@ -12192,7 +12206,9 @@ function CartCheckList() {
         CheckBox,
         {
           isChecked: selectionMap[cart.id],
-          onToggle: () => handleToggleSelection(cart.id)
+          onToggle: () => handleToggleSelection(cart.id),
+          role: "cart-item-checkbox",
+          "aria-checked": selectionMap[cart.id]
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(ItemContainer, { children: [
@@ -12325,10 +12341,10 @@ const Title = newStyled.h1`
 const CartCountInfoText = newStyled.p`
   font-size: 14px;
 `;
-const LabelPrice = ({ label, price }) => {
+const LabelPrice = ({ label, price, ariaLabel }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(TotalSection, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(TotalLabel, { children: label }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(TotalAmount, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(TotalAmount, { "aria-label": ariaLabel, children: [
       price.toLocaleString(),
       "원"
     ] })
@@ -12364,7 +12380,14 @@ const LabelPriceContainer = () => {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(PriceWrapper, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(LabelPrice, { label: "주문 금액", price: orderPrice }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(LabelPrice, { label: "배송비", price: shippingFee })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        LabelPrice,
+        {
+          ariaLabel: "shipping-fee",
+          label: "배송비",
+          price: shippingFee
+        }
+      )
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(LabelPrice, { label: "총 결제 금액", price: totalPrice })
   ] });
@@ -12434,14 +12457,13 @@ const ShoppingCartPage = () => {
         isDisabled,
         disabled: isDisabled,
         onClick: handleCheckout,
+        role: "order-button",
         children: "주문 확인"
       }
     )
   ] });
 };
 const CheckoutButton = newStyled.button`
-  position: sticky;
-  bottom: 0;
   width: 100%;
   padding: 16px;
   background-color: ${({ isDisabled }) => isDisabled ? "#BDBDBD" : "#333"};
@@ -12449,10 +12471,16 @@ const CheckoutButton = newStyled.button`
   cursor: ${({ isDisabled }) => isDisabled ? "not-allowed" : "pointer"};
   border-radius: 0px;
 `;
+var define_import_meta_env_default = { VITE_USER_ID: "dev-dino22", VITE_PASSWORD: "password", VITE_BASE_URL: "http://techcourse-lv2-alb-974870821.ap-northeast-2.elb.amazonaws.com", BASE_URL: "/react-shopping-cart/", MODE: "production", DEV: false, PROD: true, SSR: false };
+function getBrowserBaseUrl() {
+  if (typeof window === "undefined")
+    return "/";
+  return typeof import.meta !== "undefined" && define_import_meta_env_default && "/react-shopping-cart/" ? "/react-shopping-cart/" : "/";
+}
 function App() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Global, { styles: reset }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename: `${"/react-shopping-cart/"}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename: getBrowserBaseUrl(), children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/", element: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/order-confirm", element: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderConfirmPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
