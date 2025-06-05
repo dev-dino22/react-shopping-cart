@@ -4,6 +4,25 @@ var __publicField = (obj, key, value) => {
   __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
   return value;
 };
+var __accessCheck = (obj, member, msg) => {
+  if (!member.has(obj))
+    throw TypeError("Cannot " + msg);
+};
+var __privateGet = (obj, member, getter) => {
+  __accessCheck(obj, member, "read from private field");
+  return getter ? getter.call(obj) : member.get(obj);
+};
+var __privateAdd = (obj, member, value) => {
+  if (member.has(obj))
+    throw TypeError("Cannot add the same private member more than once");
+  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+};
+var __privateSet = (obj, member, value, setter) => {
+  __accessCheck(obj, member, "write to private field");
+  setter ? setter.call(obj, value) : member.set(obj, value);
+  return value;
+};
+var _uniqueIdentifierSet;
 function _mergeNamespaces(n2, m2) {
   for (var i = 0; i < m2.length; i++) {
     const e2 = m2[i];
@@ -11490,6 +11509,22 @@ const Container$5 = newStyled.div`
   max-height: 100vh;
   border: 1px solid grey;
 `;
+class UniqueIdentifier {
+  constructor() {
+    __privateAdd(this, _uniqueIdentifierSet, void 0);
+    __privateSet(this, _uniqueIdentifierSet, /* @__PURE__ */ new Set());
+  }
+  add(name) {
+    if (__privateGet(this, _uniqueIdentifierSet).has(name))
+      return;
+    __privateGet(this, _uniqueIdentifierSet).add(name);
+  }
+  get(name) {
+    return __privateGet(this, _uniqueIdentifierSet).has(name);
+  }
+}
+_uniqueIdentifierSet = new WeakMap();
+const uniqueIdentifier = new UniqueIdentifier();
 const APIContext = reactExports.createContext({
   state: {},
   setState: () => {
@@ -11503,8 +11538,14 @@ function useAPIDataContext({
   fetcher,
   name
 }) {
+  var _a, _b, _c;
   const { state, setState } = reactExports.useContext(APIContext);
   const request = reactExports.useCallback(async () => {
+    uniqueIdentifier.add(name);
+    setState((prev2) => ({
+      ...prev2,
+      [name]: { ...prev2[name], loading: true, error: null }
+    }));
     try {
       const result = await fetcher();
       setState((prev2) => ({
@@ -11514,24 +11555,24 @@ function useAPIDataContext({
     } catch (e2) {
       setState((prev2) => ({
         ...prev2,
-        [name]: { data: null, loading: false, error: e2 }
+        [name]: { ...prev2[name], loading: false, error: e2 }
       }));
-      throw new Error("데이터 요청에 실패하였습니다.");
+      throw new Error("데이터 요청 실패");
     }
-  }, [name, setState, fetcher]);
+  }, [name, setState, state]);
   reactExports.useEffect(() => {
-    if (!state[name])
+    var _a2, _b2;
+    if (uniqueIdentifier.get(name)) {
+      return;
+    }
+    if (!((_a2 = state[name]) == null ? void 0 : _a2.data) && !((_b2 = state[name]) == null ? void 0 : _b2.loading)) {
       request();
-  }, [request, state, name]);
-  const resource = state[name] || {
-    data: null,
-    loading: false,
-    error: null
-  };
+    }
+  }, [name]);
   return {
-    data: resource.data,
-    loading: resource.loading,
-    error: resource.error,
+    data: (_a = state[name]) == null ? void 0 : _a.data,
+    loading: ((_b = state[name]) == null ? void 0 : _b.loading) ?? false,
+    error: (_c = state[name]) == null ? void 0 : _c.error,
     refetch: request
   };
 }
