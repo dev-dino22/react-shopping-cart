@@ -16612,7 +16612,7 @@ const useOrderListContext = (cartListData) => {
 const FREE_SHIPPING_STANDARD = 1e5;
 const SHIPPING_FEE = 3e3;
 const ISLAND_SHIPPING_FEE = 3e3;
-function useOrderCalculation(selectedCartItems, isIsland, discount = 0) {
+function useOrderCalculation(selectedCartItems, isIsland, selectedCoupons = []) {
   return reactExports.useMemo(() => {
     const typeCount = selectedCartItems.length;
     const totalCount = selectedCartItems.reduce(
@@ -16623,26 +16623,256 @@ function useOrderCalculation(selectedCartItems, isIsland, discount = 0) {
       (acc, cart) => acc + cart.product.price * cart.quantity,
       0
     );
-    const shippingFee = (totalCartPrice >= FREE_SHIPPING_STANDARD || totalCartPrice === 0 ? 0 : SHIPPING_FEE) + (isIsland ? ISLAND_SHIPPING_FEE : 0);
-    const totalPrice = totalCartPrice + shippingFee - discount;
+    let totalDiscount = 0;
+    let hasFreeShipping = false;
+    selectedCoupons.forEach((coupon) => {
+      switch (coupon.discountType) {
+        case "fixed":
+          if (totalCartPrice >= coupon.minimumAmount) {
+            totalDiscount += coupon.discount;
+          }
+          break;
+        case "percentage":
+          totalDiscount += totalCartPrice * (coupon.discount / 100);
+          break;
+        case "buyXgetY":
+          if (selectedCartItems.length > 0) {
+            const eligibleItems = selectedCartItems.filter(
+              (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
+            );
+            if (eligibleItems.length > 0) {
+              const highestPriceItem = eligibleItems.reduce(
+                (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
+              );
+              const freeQuantity = Math.floor(highestPriceItem.quantity / 2);
+              totalDiscount += highestPriceItem.product.price * freeQuantity;
+            }
+          }
+          break;
+        case "freeShipping":
+          if (totalCartPrice >= coupon.minimumAmount) {
+            hasFreeShipping = true;
+          }
+          break;
+      }
+    });
+    const baseShippingFee = totalCartPrice >= FREE_SHIPPING_STANDARD || totalCartPrice === 0 ? 0 : SHIPPING_FEE;
+    const additionalShippingFee = isIsland ? ISLAND_SHIPPING_FEE : 0;
+    const shippingFee = baseShippingFee + additionalShippingFee;
+    const finalDiscount = totalDiscount + (hasFreeShipping ? shippingFee : 0);
+    const totalPrice = totalCartPrice + shippingFee - finalDiscount;
     return {
       typeCount,
       totalCount,
       totalCartPrice,
       shippingFee,
-      totalPrice
+      totalPrice,
+      finalDiscount
     };
-  }, [selectedCartItems, isIsland, discount]);
+  }, [selectedCartItems, isIsland, selectedCoupons]);
 }
+function calculateCouponDiscount(selectedCoupons, totalCartPrice, shippingFee, selectedCartItems) {
+  let totalDiscount = 0;
+  let finalShippingFee = shippingFee;
+  let hasFreeShipping = false;
+  selectedCoupons.forEach((coupon) => {
+    switch (coupon.discountType) {
+      case "fixed":
+        if (totalCartPrice >= coupon.minimumAmount) {
+          totalDiscount += coupon.discount;
+        }
+        break;
+      case "percentage":
+        totalDiscount += totalCartPrice * (coupon.discount / 100);
+        break;
+      case "buyXgetY":
+        if (selectedCartItems && selectedCartItems.length > 0) {
+          const eligibleItems = selectedCartItems.filter(
+            (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
+          );
+          if (eligibleItems.length > 0) {
+            const highestPriceItem = eligibleItems.reduce(
+              (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
+            );
+            const freeQuantity = Math.floor(highestPriceItem.quantity / 2);
+            totalDiscount += highestPriceItem.product.price * freeQuantity;
+          }
+        }
+        break;
+      case "freeShipping":
+        if (totalCartPrice >= coupon.minimumAmount) {
+          finalShippingFee = 0;
+          hasFreeShipping = true;
+        }
+        break;
+    }
+  });
+  if (!hasFreeShipping && totalCartPrice >= 1e5) {
+    finalShippingFee = 0;
+  }
+  const finalDiscount = totalDiscount + (hasFreeShipping ? shippingFee : 0);
+  return {
+    totalDiscount,
+    finalShippingFee,
+    hasFreeShipping,
+    finalDiscount
+  };
+}
+function isCouponAvailable(coupon, totalCartPrice, selectedCartItems) {
+  switch (coupon.discountType) {
+    case "fixed":
+    case "freeShipping":
+      return totalCartPrice >= coupon.minimumAmount;
+    case "buyXgetY":
+      return (selectedCartItems ?? []).some(
+        (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
+      );
+    case "percentage":
+      if (coupon.availableTime) {
+        const now2 = /* @__PURE__ */ new Date();
+        const currentHour = now2.getHours();
+        const startHour = parseInt(coupon.availableTime.start);
+        const endHour = parseInt(coupon.availableTime.end);
+        return currentHour >= startHour && currentHour < endHour;
+      }
+      return true;
+    default:
+      return false;
+  }
+}
+function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedCartItems) {
+  const availableCoupons = coupons.filter(
+    (coupon) => isCouponAvailable(coupon, totalCartPrice, selectedCartItems)
+  );
+  const priorityMap = {
+    percentage: 1,
+    fixed: 2,
+    buyXgetY: 3,
+    freeShipping: 4
+  };
+  const sortedCoupons = [...availableCoupons].sort(
+    (a, b2) => priorityMap[a.discountType] - priorityMap[b2.discountType]
+  );
+  let bestResult = {
+    selectedCoupons: [],
+    totalDiscount: 0,
+    finalShippingFee: shippingFee,
+    hasFreeShipping: false
+  };
+  for (const coupon of sortedCoupons) {
+    const result = calculateCouponDiscount(
+      [coupon],
+      totalCartPrice,
+      shippingFee,
+      selectedCartItems
+    );
+    if (result.finalDiscount > bestResult.totalDiscount) {
+      bestResult = {
+        selectedCoupons: [coupon],
+        totalDiscount: result.finalDiscount,
+        finalShippingFee: result.finalShippingFee,
+        hasFreeShipping: result.hasFreeShipping
+      };
+    }
+  }
+  for (let i = 0; i < sortedCoupons.length; i++) {
+    for (let j = i + 1; j < sortedCoupons.length; j++) {
+      const result = calculateCouponDiscount(
+        [sortedCoupons[i], sortedCoupons[j]],
+        totalCartPrice,
+        shippingFee,
+        selectedCartItems
+      );
+      if (result.finalDiscount > bestResult.totalDiscount) {
+        bestResult = {
+          selectedCoupons: [sortedCoupons[i], sortedCoupons[j]],
+          totalDiscount: result.finalDiscount,
+          finalShippingFee: result.finalShippingFee,
+          hasFreeShipping: result.hasFreeShipping
+        };
+      }
+    }
+  }
+  return bestResult;
+}
+const CouponContext = reactExports.createContext(null);
+const CouponProvider = ({ children }) => {
+  const [selectedCoupons, setSelectedCoupons] = reactExports.useState([]);
+  const [isInitialized, setIsInitialized] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    return () => {
+      setIsInitialized(false);
+    };
+  }, []);
+  const handleCouponToggle = reactExports.useCallback(
+    (coupon) => {
+      setSelectedCoupons((prev2) => {
+        if (prev2.some((c2) => c2.id === coupon.id)) {
+          return prev2.filter((c2) => c2.id !== coupon.id);
+        } else {
+          if (prev2.length >= 2) {
+            return prev2;
+          }
+          return [...prev2, coupon];
+        }
+      });
+    },
+    [setSelectedCoupons]
+  );
+  const handleCouponSelection = reactExports.useCallback(
+    (coupons) => {
+      setSelectedCoupons(coupons);
+    },
+    [setSelectedCoupons]
+  );
+  const initializeCoupons = reactExports.useCallback(
+    (coupons, totalCartPrice, shippingFee, selectedCartItems) => {
+      if (!isInitialized && coupons.length > 0) {
+        const result = optimizeCouponSelection(
+          coupons,
+          totalCartPrice,
+          shippingFee,
+          selectedCartItems
+        );
+        setSelectedCoupons(result.selectedCoupons);
+        setIsInitialized(true);
+        return result.selectedCoupons.length > 0;
+      }
+      return false;
+    },
+    [isInitialized]
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    CouponContext.Provider,
+    {
+      value: {
+        selectedCoupons,
+        handleCouponToggle,
+        handleCouponSelection,
+        initializeCoupons
+      },
+      children
+    }
+  );
+};
+const useCouponContext = () => {
+  const context = reactExports.useContext(CouponContext);
+  if (!context) {
+    throw new Error("useCouponContext 는 CouponProvider 안에서 사용해주세요.");
+  }
+  return context;
+};
 function OrderInfoTitle() {
   const { data: cartListData } = useAPIDataContext({
     name: "cart",
     fetcher: getShoppingCartData
   });
   const { selectedCartItems } = useOrderListContext(cartListData);
+  const { selectedCoupons } = useCouponContext();
   const { typeCount, totalCount } = useOrderCalculation(
-    cartListData,
-    selectedCartItems
+    selectedCartItems,
+    false,
+    selectedCoupons
   );
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Flex, { justifyContent: "flex-start", alignItems: "flex-start", gap: "xs", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(InfoTitle$1, { children: "주문 확인" }),
@@ -18488,204 +18718,6 @@ const InfoIcon = newStyled.img`
   width: 14px;
   height: 14px;
 `;
-function calculateCouponDiscount(coupons, selectedCouponIds, totalCartPrice, shippingFee, selectedCartItems) {
-  const selectedCoupons = coupons.filter(
-    (coupon) => selectedCouponIds.includes(coupon.id)
-  );
-  let totalDiscount = 0;
-  let finalShippingFee = shippingFee;
-  let hasFreeShipping = false;
-  selectedCoupons.forEach((coupon) => {
-    switch (coupon.discountType) {
-      case "fixed":
-        if (totalCartPrice >= coupon.minimumAmount) {
-          totalDiscount += coupon.discount;
-        }
-        break;
-      case "percentage":
-        totalDiscount += totalCartPrice * (coupon.discount / 100);
-        break;
-      case "buyXgetY":
-        if (selectedCartItems && selectedCartItems.length > 0) {
-          const eligibleItems = selectedCartItems.filter(
-            (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
-          );
-          if (eligibleItems.length > 0) {
-            const highestPriceItem = eligibleItems.reduce(
-              (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
-            );
-            const freeQuantity = Math.floor(highestPriceItem.quantity / 2);
-            totalDiscount += highestPriceItem.product.price * freeQuantity;
-          }
-        }
-        break;
-      case "freeShipping":
-        if (totalCartPrice >= coupon.minimumAmount) {
-          finalShippingFee = 0;
-          hasFreeShipping = true;
-        }
-        break;
-    }
-  });
-  if (!hasFreeShipping && totalCartPrice >= 1e5) {
-    finalShippingFee = 0;
-  }
-  const finalDiscount = totalDiscount + (hasFreeShipping ? shippingFee : 0);
-  return {
-    totalDiscount,
-    finalShippingFee,
-    hasFreeShipping,
-    selectedCoupons,
-    finalDiscount
-  };
-}
-function isCouponAvailable(coupon, totalCartPrice, selectedCartItems) {
-  switch (coupon.discountType) {
-    case "fixed":
-    case "freeShipping":
-      return totalCartPrice >= coupon.minimumAmount;
-    case "buyXgetY":
-      return (selectedCartItems ?? []).some(
-        (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
-      );
-    case "percentage":
-      if (coupon.availableTime) {
-        const now2 = /* @__PURE__ */ new Date();
-        const currentHour = now2.getHours();
-        const startHour = parseInt(coupon.availableTime.start);
-        const endHour = parseInt(coupon.availableTime.end);
-        return currentHour >= startHour && currentHour < endHour;
-      }
-      return true;
-    default:
-      return false;
-  }
-}
-function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedCartItems) {
-  const availableCoupons = coupons.filter(
-    (coupon) => isCouponAvailable(coupon, totalCartPrice, selectedCartItems)
-  );
-  const priorityMap = {
-    percentage: 1,
-    fixed: 2,
-    buyXgetY: 3,
-    freeShipping: 4
-  };
-  const sortedCoupons = [...availableCoupons].sort(
-    (a, b2) => priorityMap[a.discountType] - priorityMap[b2.discountType]
-  );
-  let bestResult = {
-    selectedCouponIds: [],
-    totalDiscount: 0,
-    finalShippingFee: shippingFee,
-    hasFreeShipping: false
-  };
-  for (const coupon of sortedCoupons) {
-    const result = calculateCouponDiscount(
-      sortedCoupons,
-      [coupon.id],
-      totalCartPrice,
-      shippingFee,
-      selectedCartItems
-    );
-    if (result.finalDiscount > bestResult.totalDiscount) {
-      bestResult = {
-        selectedCouponIds: [coupon.id],
-        totalDiscount: result.finalDiscount,
-        finalShippingFee: result.finalShippingFee,
-        hasFreeShipping: result.hasFreeShipping
-      };
-    }
-  }
-  for (let i = 0; i < sortedCoupons.length; i++) {
-    for (let j = i + 1; j < sortedCoupons.length; j++) {
-      const selectedCouponIds = [sortedCoupons[i].id, sortedCoupons[j].id];
-      const result = calculateCouponDiscount(
-        sortedCoupons,
-        selectedCouponIds,
-        totalCartPrice,
-        shippingFee,
-        selectedCartItems
-      );
-      if (result.finalDiscount > bestResult.totalDiscount) {
-        bestResult = {
-          selectedCouponIds,
-          totalDiscount: result.finalDiscount,
-          finalShippingFee: result.finalShippingFee,
-          hasFreeShipping: result.hasFreeShipping
-        };
-      }
-    }
-  }
-  return bestResult;
-}
-const CouponContext = reactExports.createContext(null);
-const CouponProvider = ({ children }) => {
-  const [selectedCoupon, setSelectedCoupon] = reactExports.useState([]);
-  const [isInitialized, setIsInitialized] = reactExports.useState(false);
-  reactExports.useEffect(() => {
-    return () => {
-      setIsInitialized(false);
-    };
-  }, []);
-  const handleCouponToggle = reactExports.useCallback(
-    (couponId) => {
-      setSelectedCoupon((prev2) => {
-        if (prev2.includes(couponId)) {
-          return prev2.filter((id) => id !== couponId);
-        } else {
-          if (prev2.length >= 2) {
-            return prev2;
-          }
-          return [...prev2, couponId];
-        }
-      });
-    },
-    [setSelectedCoupon]
-  );
-  const handleCouponSelectionIds = reactExports.useCallback(
-    (couponIds) => {
-      setSelectedCoupon(couponIds);
-    },
-    [setSelectedCoupon]
-  );
-  const initializeCoupons = reactExports.useCallback(
-    (coupons, totalCartPrice, shippingFee, selectedCartItems) => {
-      if (!isInitialized && coupons.length > 0) {
-        const result = optimizeCouponSelection(
-          coupons,
-          totalCartPrice,
-          shippingFee,
-          selectedCartItems
-        );
-        setSelectedCoupon(result.selectedCouponIds);
-        setIsInitialized(true);
-        return result.selectedCouponIds.length > 0;
-      }
-      return false;
-    },
-    [isInitialized]
-  );
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    CouponContext.Provider,
-    {
-      value: {
-        selectedCoupon,
-        handleCouponToggle,
-        handleCouponSelectionIds,
-        initializeCoupons
-      },
-      children
-    }
-  );
-};
-const useCouponContext = () => {
-  const context = reactExports.useContext(CouponContext);
-  if (!context) {
-    throw new Error("useCouponContext 는 CouponProvider 안에서 사용해주세요.");
-  }
-  return context;
-};
 function ToastMessage({ message, type, onClose }) {
   setTimeout(() => {
     if (onClose) {
@@ -18765,28 +18797,20 @@ function useToastContext() {
   return context;
 }
 function CouponApplyButton({
-  onClose,
-  couponsResource
+  onClose
 }) {
   const { data: cartListData } = useAPIDataContext({
     fetcher: getShoppingCartData,
     name: "cart"
   });
   const { selectedCartItems, isIsland, handleDiscountSetting } = useOrderListContext(cartListData);
-  const { totalCartPrice, shippingFee } = useOrderCalculation(
+  const { selectedCoupons } = useCouponContext();
+  const { finalDiscount } = useOrderCalculation(
     selectedCartItems,
-    isIsland
+    isIsland,
+    selectedCoupons
   );
   const { showToast } = useToastContext();
-  const coupons = reactExports.use(couponsResource);
-  const { selectedCoupon } = useCouponContext();
-  const { finalDiscount } = calculateCouponDiscount(
-    coupons,
-    selectedCoupon,
-    totalCartPrice,
-    shippingFee,
-    selectedCartItems
-  );
   const handleCouponApply = reactExports.useCallback(() => {
     handleDiscountSetting(finalDiscount);
     showToast("쿠폰이 적용되었습니다.", "info");
@@ -18874,14 +18898,12 @@ function LabelTextPair({
   ] });
 }
 function CouponCheckItem({
-  couponId,
-  expiryDate,
-  titleText,
+  coupon,
   details,
   disabled = false
 }) {
-  const { selectedCoupon, handleCouponToggle } = useCouponContext();
-  const [year, month, day] = expiryDate;
+  const { selectedCoupons, handleCouponToggle } = useCouponContext();
+  const [year, month, day] = coupon.expirationDate;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     Container$b,
     {
@@ -18894,9 +18916,11 @@ function CouponCheckItem({
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           CheckboxLabel,
           {
-            isChecked: selectedCoupon.includes(couponId),
-            onToggle: () => !disabled && handleCouponToggle(couponId),
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(CouponTitle, { children: titleText })
+            isChecked: selectedCoupons.some(
+              (selectedCoupon) => selectedCoupon.id === coupon.id
+            ),
+            onToggle: () => !disabled && handleCouponToggle(coupon),
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(CouponTitle, { children: coupon.description })
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -18993,9 +19017,7 @@ function CouponCheckList({
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       CouponCheckItem,
       {
-        couponId: coupon.id,
-        titleText: coupon.description,
-        expiryDate: coupon.expirationDate,
+        coupon,
         details: getCouponDetails(coupon),
         disabled: !isAvailable
       },
@@ -19122,11 +19144,12 @@ function DeliveryInfo() {
     fetcher: getShoppingCartData,
     name: "cart"
   });
-  const { selectedCartItems, isIsland, handleIsIslandToggle, discount } = useOrderListContext(cartListData);
-  const { totalCartPrice, shippingFee, totalPrice } = useOrderCalculation(
+  const { selectedCartItems, isIsland, handleIsIslandToggle } = useOrderListContext(cartListData);
+  const { selectedCoupons } = useCouponContext();
+  const { totalCartPrice, shippingFee, totalPrice, finalDiscount } = useOrderCalculation(
     selectedCartItems,
     isIsland,
-    discount
+    selectedCoupons
   );
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Container$7, { alignItems: "flex-start", gap: "xs", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Title$1, { children: "배송 정보" }),
@@ -19137,7 +19160,7 @@ function DeliveryInfo() {
         totalCartPrice,
         shippingFee,
         totalPrice,
-        couponDiscount: -discount
+        couponDiscount: -finalDiscount
       }
     )
   ] });
@@ -19155,11 +19178,12 @@ function PayButton$1() {
     fetcher: getShoppingCartData,
     name: "cart"
   });
-  const { selectedCartItems, isIsland, discount } = useOrderListContext(cartListData);
+  const { selectedCartItems, isIsland } = useOrderListContext(cartListData);
+  const { selectedCoupons } = useCouponContext();
   const { totalPrice, typeCount, totalCount } = useOrderCalculation(
     selectedCartItems,
     isIsland,
-    discount
+    selectedCoupons
   );
   const navigate = useNavigate();
   const navigateToSuccessPage = () => {
