@@ -16638,13 +16638,15 @@ function useOrderCalculation(selectedCartItems, isIsland, selectedCoupons = []) 
         case "buyXgetY":
           if (selectedCartItems.length > 0) {
             const eligibleItems = selectedCartItems.filter(
-              (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
+              (item) => item.quantity >= coupon.buyQuantity && item.quantity >= coupon.buyQuantity + coupon.getQuantity
             );
             if (eligibleItems.length > 0) {
               const highestPriceItem = eligibleItems.reduce(
                 (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
               );
-              const freeQuantity = Math.floor(highestPriceItem.quantity / 2);
+              const freeQuantity = Math.floor(
+                highestPriceItem.quantity / (coupon.buyQuantity + coupon.getQuantity)
+              ) * coupon.getQuantity;
               totalDiscount += highestPriceItem.product.price * freeQuantity;
             }
           }
@@ -16694,7 +16696,9 @@ function calculateCouponDiscount(selectedCoupons, totalCartPrice, shippingFee, s
             const highestPriceItem = eligibleItems.reduce(
               (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
             );
-            const freeQuantity = Math.floor(highestPriceItem.quantity / 2);
+            const freeQuantity = Math.floor(
+              highestPriceItem.quantity / (coupon.buyQuantity + coupon.getQuantity)
+            ) * coupon.getQuantity;
             totalDiscount += highestPriceItem.product.price * freeQuantity;
           }
         }
@@ -16757,7 +16761,8 @@ function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedC
     selectedCoupons: [],
     totalDiscount: 0,
     finalShippingFee: shippingFee,
-    hasFreeShipping: false
+    hasFreeShipping: false,
+    finalDiscount: 0
   };
   for (const coupon of sortedCoupons) {
     const result = calculateCouponDiscount(
@@ -16766,12 +16771,13 @@ function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedC
       shippingFee,
       selectedCartItems
     );
-    if (result.finalDiscount > bestResult.totalDiscount) {
+    if (result.finalDiscount > bestResult.finalDiscount) {
       bestResult = {
         selectedCoupons: [coupon],
-        totalDiscount: result.finalDiscount,
+        totalDiscount: result.totalDiscount,
         finalShippingFee: result.finalShippingFee,
-        hasFreeShipping: result.hasFreeShipping
+        hasFreeShipping: result.hasFreeShipping,
+        finalDiscount: result.finalDiscount
       };
     }
   }
@@ -16783,12 +16789,13 @@ function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedC
         shippingFee,
         selectedCartItems
       );
-      if (result.finalDiscount > bestResult.totalDiscount) {
+      if (result.finalDiscount > bestResult.finalDiscount) {
         bestResult = {
           selectedCoupons: [sortedCoupons[i], sortedCoupons[j]],
-          totalDiscount: result.finalDiscount,
+          totalDiscount: result.totalDiscount,
           finalShippingFee: result.finalShippingFee,
-          hasFreeShipping: result.hasFreeShipping
+          hasFreeShipping: result.hasFreeShipping,
+          finalDiscount: result.finalDiscount
         };
       }
     }
@@ -19365,6 +19372,7 @@ function CartItemCounter({ cart }) {
     fetcher: getShoppingCartData,
     name: "cart"
   });
+  const { setSelectedCartItems } = useOrderListContext(cartListData);
   const { showToast } = useToastContext();
   const handlePlusQuantity = async (cartId) => {
     try {
@@ -19375,6 +19383,11 @@ function CartItemCounter({ cart }) {
         throw new Error("장바구니에 해당 아이템이 없습니다.");
       await patchCartItem(cartId, cart2.quantity + 1);
       await cartRefetch();
+      setSelectedCartItems(
+        (prev2) => prev2.map(
+          (item) => item.id === cartId ? { ...item, quantity: item.quantity + 1 } : item
+        )
+      );
     } catch (e3) {
       showToast("장바구니에 추가하는 데 실패했습니다.", "error");
     }
@@ -19388,6 +19401,11 @@ function CartItemCounter({ cart }) {
         throw new Error("장바구니에 해당 아이템이 없습니다.");
       await patchCartItem(cartId, cart2.quantity - 1);
       await cartRefetch();
+      setSelectedCartItems(
+        (prev2) => prev2.map(
+          (item) => item.id === cartId ? { ...item, quantity: item.quantity - 1 } : item
+        )
+      );
     } catch (e3) {
       showToast("장바구니에서 뺴는 데 실패했습니다.", "error");
     }
