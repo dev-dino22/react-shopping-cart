@@ -16220,6 +16220,13 @@ const Container$g = newStyled.div`
   max-height: 100vh;
   border: 1px solid grey;
 `;
+function ScrollToTopOnRouteChange() {
+  const location = useLocation();
+  reactExports.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  return null;
+}
 class UniqueIdentifier {
   constructor() {
     __privateAdd(this, _uniqueIdentifierSet, void 0);
@@ -16609,198 +16616,281 @@ const useOrderListContext = (cartListData) => {
     handleDiscountSetting
   };
 };
-const FREE_SHIPPING_STANDARD = 1e5;
-const SHIPPING_FEE = 3e3;
-const ISLAND_SHIPPING_FEE = 3e3;
-function useOrderCalculation(selectedCartItems, isIsland, selectedCoupons = []) {
-  return reactExports.useMemo(() => {
-    const typeCount = selectedCartItems.length;
-    const totalCount = selectedCartItems.reduce(
-      (acc, cart) => acc + cart.quantity,
-      0
-    );
-    const totalCartPrice = selectedCartItems.reduce(
-      (acc, cart) => acc + cart.product.price * cart.quantity,
-      0
-    );
-    let totalDiscount = 0;
-    let hasFreeShipping = false;
-    selectedCoupons.forEach((coupon) => {
-      switch (coupon.discountType) {
-        case "fixed":
-          if (totalCartPrice >= coupon.minimumAmount) {
-            totalDiscount += coupon.discount;
-          }
-          break;
-        case "percentage":
-          totalDiscount += totalCartPrice * (coupon.discount / 100);
-          break;
-        case "buyXgetY":
-          if (selectedCartItems.length > 0) {
-            const eligibleItems = selectedCartItems.filter(
-              (item) => item.quantity >= coupon.buyQuantity && item.quantity >= coupon.buyQuantity + coupon.getQuantity
-            );
-            if (eligibleItems.length > 0) {
-              const highestPriceItem = eligibleItems.reduce(
-                (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
-              );
-              const freeQuantity = Math.floor(
-                highestPriceItem.quantity / (coupon.buyQuantity + coupon.getQuantity)
-              ) * coupon.getQuantity;
-              totalDiscount += highestPriceItem.product.price * freeQuantity;
-            }
-          }
-          break;
-        case "freeShipping":
-          if (totalCartPrice >= coupon.minimumAmount) {
-            hasFreeShipping = true;
-          }
-          break;
-      }
-    });
-    const baseShippingFee = totalCartPrice >= FREE_SHIPPING_STANDARD || totalCartPrice === 0 ? 0 : SHIPPING_FEE;
-    const additionalShippingFee = isIsland ? ISLAND_SHIPPING_FEE : 0;
-    const shippingFee = baseShippingFee + additionalShippingFee;
-    const finalDiscount = totalDiscount + (hasFreeShipping ? shippingFee : 0);
-    const totalPrice = totalCartPrice + shippingFee - finalDiscount;
-    return {
-      typeCount,
-      totalCount,
-      totalCartPrice,
-      shippingFee,
-      totalPrice,
-      finalDiscount
-    };
-  }, [selectedCartItems, isIsland, selectedCoupons]);
-}
-function calculateCouponDiscount(selectedCoupons, totalCartPrice, shippingFee, selectedCartItems) {
-  let totalDiscount = 0;
-  let finalShippingFee = shippingFee;
-  let hasFreeShipping = false;
-  selectedCoupons.forEach((coupon) => {
-    switch (coupon.discountType) {
-      case "fixed":
-        if (totalCartPrice >= coupon.minimumAmount) {
-          totalDiscount += coupon.discount;
-        }
-        break;
-      case "percentage":
-        totalDiscount += totalCartPrice * (coupon.discount / 100);
-        break;
-      case "buyXgetY":
-        if (selectedCartItems && selectedCartItems.length > 0) {
-          const eligibleItems = selectedCartItems.filter(
-            (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
-          );
-          if (eligibleItems.length > 0) {
-            const highestPriceItem = eligibleItems.reduce(
-              (prev2, current) => prev2.product.price > current.product.price ? prev2 : current
-            );
-            const freeQuantity = Math.floor(
-              highestPriceItem.quantity / (coupon.buyQuantity + coupon.getQuantity)
-            ) * coupon.getQuantity;
-            totalDiscount += highestPriceItem.product.price * freeQuantity;
-          }
-        }
-        break;
-      case "freeShipping":
-        if (totalCartPrice >= coupon.minimumAmount) {
-          finalShippingFee = 0;
-          hasFreeShipping = true;
-        }
-        break;
-    }
-  });
-  if (!hasFreeShipping && totalCartPrice >= 1e5) {
-    finalShippingFee = 0;
+const applyFixedDiscount = (coupon, totalCartPrice, acc) => {
+  if (totalCartPrice >= coupon.minimumAmount) {
+    return { ...acc, totalDiscount: acc.totalDiscount + coupon.discount };
   }
-  const finalDiscount = totalDiscount + (hasFreeShipping ? shippingFee : 0);
+  return acc;
+};
+const applyPercentageDiscount = (coupon, totalCartPrice, acc) => {
   return {
-    totalDiscount,
+    ...acc,
+    totalDiscount: acc.totalDiscount + totalCartPrice * (coupon.discount / 100)
+  };
+};
+const applyBuyXgetYDiscount = (coupon, items, acc) => {
+  if (!(items == null ? void 0 : items.length))
+    return acc;
+  const eligibleItems = items.filter(
+    (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
+  );
+  if (!eligibleItems.length)
+    return acc;
+  const highestItem = eligibleItems.reduce(
+    (a, b2) => a.product.price > b2.product.price ? a : b2
+  );
+  const freeQty = Math.floor(
+    highestItem.quantity / (coupon.buyQuantity + coupon.getQuantity)
+  ) * coupon.getQuantity;
+  return {
+    ...acc,
+    totalDiscount: acc.totalDiscount + highestItem.product.price * freeQty
+  };
+};
+const applyFreeShippingDiscount = (coupon, totalCartPrice, acc) => {
+  if (totalCartPrice >= coupon.minimumAmount) {
+    return { ...acc, finalShippingFee: 0, hasFreeShipping: true };
+  }
+  return acc;
+};
+function calculateCouponDiscount(selectedCoupons, totalCartPrice, shippingFee, selectedCartItems) {
+  const initial = {
+    totalDiscount: 0,
+    finalShippingFee: shippingFee,
+    hasFreeShipping: false
+  };
+  const result = selectedCoupons.reduce((acc, coupon) => {
+    switch (coupon.discountType) {
+      case "buyXgetY":
+        return applyBuyXgetYDiscount(
+          coupon,
+          selectedCartItems,
+          acc
+        );
+      case "fixed":
+        return applyFixedDiscount(
+          coupon,
+          totalCartPrice,
+          acc
+        );
+      case "percentage":
+        return applyPercentageDiscount(
+          coupon,
+          totalCartPrice,
+          acc
+        );
+      case "freeShipping":
+        return applyFreeShippingDiscount(
+          coupon,
+          totalCartPrice,
+          acc
+        );
+      default:
+        return acc;
+    }
+  }, initial);
+  const finalShippingFee = !result.hasFreeShipping && totalCartPrice >= 1e5 ? 0 : result.finalShippingFee;
+  return {
+    ...result,
     finalShippingFee,
-    hasFreeShipping,
-    finalDiscount
+    finalDiscount: result.totalDiscount + (result.hasFreeShipping ? shippingFee : 0)
   };
 }
+const validateCoupons = (coupon) => ({
+  fixed: (totalCartPrice) => {
+    if (coupon.discountType !== "fixed")
+      return false;
+    return totalCartPrice >= coupon.minimumAmount;
+  },
+  freeShipping: (totalCartPrice) => {
+    if (coupon.discountType !== "freeShipping")
+      return false;
+    return totalCartPrice >= coupon.minimumAmount;
+  },
+  buyXgetY: (selectedCartItems) => {
+    if (coupon.discountType !== "buyXgetY")
+      return false;
+    return (selectedCartItems ?? []).some(
+      (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
+    );
+  },
+  percentage: () => {
+    if (coupon.discountType !== "percentage")
+      return false;
+    if (!coupon.availableTime)
+      return true;
+    const now2 = /* @__PURE__ */ new Date();
+    const currentHour = now2.getHours();
+    const startHour = parseInt(coupon.availableTime.start, 10);
+    const endHour = parseInt(coupon.availableTime.end, 10);
+    return currentHour >= startHour && currentHour < endHour;
+  }
+});
 function isCouponAvailable(coupon, totalCartPrice, selectedCartItems) {
+  const validators = validateCoupons(coupon);
   switch (coupon.discountType) {
     case "fixed":
+      return validators.fixed(totalCartPrice);
     case "freeShipping":
-      return totalCartPrice >= coupon.minimumAmount;
+      return validators.freeShipping(totalCartPrice);
     case "buyXgetY":
-      return (selectedCartItems ?? []).some(
-        (item) => item.quantity >= coupon.buyQuantity + coupon.getQuantity
-      );
+      return validators.buyXgetY(selectedCartItems);
     case "percentage":
-      if (coupon.availableTime) {
-        const now2 = /* @__PURE__ */ new Date();
-        const currentHour = now2.getHours();
-        const startHour = parseInt(coupon.availableTime.start);
-        const endHour = parseInt(coupon.availableTime.end);
-        return currentHour >= startHour && currentHour < endHour;
-      }
-      return true;
+      return validators.percentage();
     default:
       return false;
   }
 }
-function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedCartItems) {
-  const availableCoupons = coupons.filter(
+const getAvailableCoupons = (coupons, totalCartPrice, selectedCartItems) => {
+  return coupons.filter(
     (coupon) => isCouponAvailable(coupon, totalCartPrice, selectedCartItems)
   );
-  const priorityMap = {
-    percentage: 1,
-    fixed: 2,
-    buyXgetY: 3,
-    freeShipping: 4
-  };
-  const sortedCoupons = [...availableCoupons].sort(
-    (a, b2) => priorityMap[a.discountType] - priorityMap[b2.discountType]
+};
+const PRIORITY_MAP = {
+  percentage: 1,
+  fixed: 2,
+  buyXgetY: 3,
+  freeShipping: 4
+};
+const sortCouponsByPriority = (coupons) => {
+  return [...coupons].sort(
+    (a, b2) => PRIORITY_MAP[a.discountType] - PRIORITY_MAP[b2.discountType]
   );
-  let bestResult = {
-    selectedCoupons: [],
-    totalDiscount: 0,
-    finalShippingFee: shippingFee,
-    hasFreeShipping: false,
-    finalDiscount: 0
-  };
-  for (const coupon of sortedCoupons) {
+};
+function generateCouponCombinations(coupons, maxCombinations = 2) {
+  const combinations = [];
+  const memo = /* @__PURE__ */ new Set();
+  function isUniqueCombination(combination) {
+    const key = combination.map((c2) => c2.id).sort().join(",");
+    if (memo.has(key))
+      return false;
+    memo.add(key);
+    return true;
+  }
+  function addCombination(combination) {
+    if (isUniqueCombination(combination)) {
+      combinations.push([...combination]);
+    }
+  }
+  function generateCombinations(current, start, depth) {
+    if (current.length > 0) {
+      addCombination(current);
+    }
+    if (depth >= maxCombinations)
+      return;
+    for (let i = start; i < coupons.length; i++) {
+      current.push(coupons[i]);
+      generateCombinations(current, i + 1, depth + 1);
+      current.pop();
+    }
+  }
+  generateCombinations([], 0, 0);
+  return combinations;
+}
+class LRUCache {
+  constructor(capacity) {
+    __publicField(this, "cache");
+    __publicField(this, "capacity");
+    this.cache = /* @__PURE__ */ new Map();
+    this.capacity = capacity;
+  }
+  get(key) {
+    if (!this.cache.has(key))
+      return void 0;
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.capacity) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== void 0) {
+        this.cache.delete(firstKey);
+      }
+    }
+    this.cache.set(key, value);
+  }
+}
+function findBestCouponCombination(couponCombinations, totalCartPrice, shippingFee, selectedCartItems) {
+  const memo = new LRUCache(100);
+  function calculateBestCombination(combination) {
+    const key = combination.map((c2) => c2.id).sort().join(",");
+    const cached = memo.get(key);
+    if (cached)
+      return cached;
     const result = calculateCouponDiscount(
-      [coupon],
+      combination,
       totalCartPrice,
       shippingFee,
       selectedCartItems
     );
-    if (result.finalDiscount > bestResult.finalDiscount) {
-      bestResult = {
-        selectedCoupons: [coupon],
-        totalDiscount: result.totalDiscount,
-        finalShippingFee: result.finalShippingFee,
-        hasFreeShipping: result.hasFreeShipping,
-        finalDiscount: result.finalDiscount
-      };
-    }
+    const state = {
+      selectedCoupons: combination,
+      totalDiscount: result.totalDiscount,
+      finalShippingFee: result.finalShippingFee,
+      hasFreeShipping: result.hasFreeShipping,
+      finalDiscount: result.finalDiscount,
+      remainingCoupons: []
+    };
+    memo.set(key, state);
+    return state;
   }
-  for (let i = 0; i < sortedCoupons.length; i++) {
-    for (let j = i + 1; j < sortedCoupons.length; j++) {
-      const result = calculateCouponDiscount(
-        [sortedCoupons[i], sortedCoupons[j]],
-        totalCartPrice,
-        shippingFee,
-        selectedCartItems
-      );
-      if (result.finalDiscount > bestResult.finalDiscount) {
-        bestResult = {
-          selectedCoupons: [sortedCoupons[i], sortedCoupons[j]],
-          totalDiscount: result.totalDiscount,
-          finalShippingFee: result.finalShippingFee,
-          hasFreeShipping: result.hasFreeShipping,
-          finalDiscount: result.finalDiscount
-        };
+  return couponCombinations.reduce(
+    (bestResult, combination) => {
+      try {
+        const currentResult = calculateBestCombination(combination);
+        return currentResult.finalDiscount > bestResult.finalDiscount ? {
+          selectedCoupons: currentResult.selectedCoupons,
+          totalDiscount: currentResult.totalDiscount,
+          finalShippingFee: currentResult.finalShippingFee,
+          hasFreeShipping: currentResult.hasFreeShipping,
+          finalDiscount: currentResult.finalDiscount
+        } : bestResult;
+      } catch (error) {
+        console.error("combination 도중 오류:", error);
+        return bestResult;
       }
+    },
+    {
+      selectedCoupons: [],
+      totalDiscount: 0,
+      finalShippingFee: shippingFee,
+      hasFreeShipping: false,
+      finalDiscount: 0
     }
+  );
+}
+function optimizeCouponSelection(coupons, totalCartPrice, shippingFee, selectedCartItems, maxCombinations = 2) {
+  try {
+    const availableCoupons = getAvailableCoupons(
+      coupons,
+      totalCartPrice,
+      selectedCartItems
+    );
+    const sortedCoupons = sortCouponsByPriority(availableCoupons);
+    const combinations = generateCouponCombinations(
+      sortedCoupons,
+      maxCombinations
+    );
+    return findBestCouponCombination(
+      combinations,
+      totalCartPrice,
+      shippingFee,
+      selectedCartItems
+    );
+  } catch (error) {
+    console.error("coupon optimization 도중 오류:", error);
+    return {
+      selectedCoupons: [],
+      totalDiscount: 0,
+      finalShippingFee: shippingFee,
+      hasFreeShipping: false,
+      finalDiscount: 0
+    };
   }
-  return bestResult;
 }
 const CouponContext = reactExports.createContext(null);
 const CouponProvider = ({ children }) => {
@@ -16839,7 +16929,8 @@ const CouponProvider = ({ children }) => {
           coupons,
           totalCartPrice,
           shippingFee,
-          selectedCartItems
+          selectedCartItems,
+          3
         );
         setSelectedCoupons(result.selectedCoupons);
         setIsInitialized(true);
@@ -16869,6 +16960,61 @@ const useCouponContext = () => {
   }
   return context;
 };
+const FREE_SHIPPING_STANDARD = 1e5;
+const SHIPPING_FEE = 3e3;
+const ISLAND_SHIPPING_FEE = 3e3;
+const getOrderBase = (items) => ({
+  typeCount: items.length,
+  totalCount: items.reduce((acc, cart) => acc + cart.quantity, 0),
+  totalCartPrice: items.reduce(
+    (acc, cart) => acc + cart.product.price * cart.quantity,
+    0
+  )
+});
+const withShipping = (base, isIsland) => {
+  const baseFee = base.totalCartPrice >= FREE_SHIPPING_STANDARD || base.totalCartPrice === 0 ? 0 : SHIPPING_FEE;
+  const shippingFee = baseFee + (isIsland ? ISLAND_SHIPPING_FEE : 0);
+  return { ...base, shippingFee };
+};
+const withCoupons = (base, coupons, items) => {
+  const { finalShippingFee, finalDiscount } = calculateCouponDiscount(
+    coupons,
+    base.totalCartPrice,
+    base.shippingFee,
+    items
+  );
+  return { ...base, finalShippingFee, finalDiscount };
+};
+const calculateTotal = (state) => ({
+  totalPrice: state.totalCartPrice + state.finalShippingFee - state.finalDiscount
+});
+const calculateOrders = (selectedCartItems) => {
+  const base = getOrderBase(selectedCartItems);
+  return {
+    getBasicOrderPrice: (isIsland = false) => ({
+      ...base,
+      ...withShipping(base, isIsland),
+      ...calculateTotal({
+        totalCartPrice: base.totalCartPrice,
+        finalShippingFee: withShipping(base, isIsland).shippingFee,
+        finalDiscount: 0
+      })
+    }),
+    getOrderPriceWithCoupon: (coupons = [], isIsland = false) => {
+      const withShippingFee = withShipping(base, isIsland);
+      const withCoupon = withCoupons(
+        withShippingFee,
+        coupons,
+        selectedCartItems
+      );
+      return {
+        ...base,
+        ...withCoupon,
+        ...calculateTotal(withCoupon)
+      };
+    }
+  };
+};
 function OrderInfoTitle() {
   const { data: cartListData } = useAPIDataContext({
     name: "cart",
@@ -16876,11 +17022,7 @@ function OrderInfoTitle() {
   });
   const { selectedCartItems } = useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();
-  const { typeCount, totalCount } = useOrderCalculation(
-    selectedCartItems,
-    false,
-    selectedCoupons
-  );
+  const { typeCount, totalCount } = calculateOrders(selectedCartItems).getOrderPriceWithCoupon(selectedCoupons);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Flex, { justifyContent: "flex-start", alignItems: "flex-start", gap: "xs", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(InfoTitle$1, { children: "주문 확인" }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -18626,8 +18768,14 @@ E.div`
   justify-content: flex-end;
   gap: 8px;
 `;
-function Button({ backgroundColor, color, children, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonContainer, { style: { backgroundColor, color }, ...props, children });
+function Button({
+  backgroundColor,
+  color,
+  children,
+  style: style2,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonContainer, { style: { backgroundColor, color, ...style2 }, ...props, children });
 }
 const ButtonContainer = newStyled.button`
   width: 100%;
@@ -18726,11 +18874,14 @@ const InfoIcon = newStyled.img`
   height: 14px;
 `;
 function ToastMessage({ message, type, onClose }) {
-  setTimeout(() => {
-    if (onClose) {
-      onClose();
-    }
-  }, 3e3);
+  reactExports.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (onClose) {
+        onClose();
+      }
+    }, 3e3);
+    return () => clearTimeout(timer);
+  }, [onClose]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Container$d, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Wrapper, { type, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorText, { children: message }) }) });
 }
 const MESSAGE_TYPE_COLOR_MAP = {
@@ -18812,11 +18963,9 @@ function CouponApplyButton({
   });
   const { selectedCartItems, isIsland, handleDiscountSetting } = useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();
-  const { finalDiscount } = useOrderCalculation(
-    selectedCartItems,
-    isIsland,
-    selectedCoupons
-  );
+  const { finalDiscount } = calculateOrders(
+    selectedCartItems
+  ).getOrderPriceWithCoupon(selectedCoupons, isIsland);
   const { showToast } = useToastContext();
   const handleCouponApply = reactExports.useCallback(() => {
     handleDiscountSetting(finalDiscount);
@@ -18898,12 +19047,15 @@ function LabelTextPair({
   if (!labelTextPairArray)
     return null;
   const [label, text] = labelTextPairArray;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { fontSize: "14px" }, children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Text, { children: [
     label,
     ": ",
     text
   ] });
 }
+const Text = newStyled.p`
+  font-size: 14px;
+`;
 function CouponCheckItem({
   coupon,
   details,
@@ -18995,10 +19147,7 @@ function CouponCheckList({
   });
   const { selectedCartItems, isIsland } = useOrderListContext(cartListData);
   const hasShownToast = reactExports.useRef(false);
-  const { totalCartPrice, shippingFee } = useOrderCalculation(
-    selectedCartItems,
-    isIsland
-  );
+  const { totalCartPrice, shippingFee } = calculateOrders(selectedCartItems).getBasicOrderPrice(isIsland);
   const { initializeCoupons } = useCouponContext();
   const { showToast } = useToastContext();
   reactExports.useEffect(() => {
@@ -19153,10 +19302,9 @@ function DeliveryInfo() {
   });
   const { selectedCartItems, isIsland, handleIsIslandToggle } = useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();
-  const { totalCartPrice, shippingFee, totalPrice, finalDiscount } = useOrderCalculation(
-    selectedCartItems,
-    isIsland,
-    selectedCoupons
+  const { totalCartPrice, finalShippingFee, totalPrice, finalDiscount } = calculateOrders(selectedCartItems).getOrderPriceWithCoupon(
+    selectedCoupons,
+    isIsland
   );
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Container$7, { alignItems: "flex-start", gap: "xs", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Title$1, { children: "배송 정보" }),
@@ -19165,7 +19313,7 @@ function DeliveryInfo() {
       OrderLabelPridce,
       {
         totalCartPrice,
-        shippingFee,
+        shippingFee: finalShippingFee,
         totalPrice,
         couponDiscount: -finalDiscount
       }
@@ -19187,11 +19335,9 @@ function PayButton$1() {
   });
   const { selectedCartItems, isIsland } = useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();
-  const { totalPrice, typeCount, totalCount } = useOrderCalculation(
-    selectedCartItems,
-    isIsland,
-    selectedCoupons
-  );
+  const { totalPrice, typeCount, totalCount } = calculateOrders(
+    selectedCartItems
+  ).getOrderPriceWithCoupon(selectedCoupons, isIsland);
   const navigate = useNavigate();
   const navigateToSuccessPage = () => {
     navigate("/success-confirm", {
@@ -19222,18 +19368,11 @@ function PayContents() {
 const Container$5 = newStyled(Flex)`
   padding: 0 24px;
 `;
-function useScrollToTop() {
-  const location = useLocation();
-  reactExports.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-}
 const OrderConfirmPage = () => {
   const navigate = useNavigate();
   const handleBackClick = () => {
     navigate(-1);
   };
-  useScrollToTop();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(CouponProvider, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { left: /* @__PURE__ */ jsxRuntimeExports.jsx(BackArrowButton, { onClick: handleBackClick }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(OrderContents, {}),
@@ -19573,7 +19712,7 @@ const LabelPriceContainer = () => {
     name: "cart"
   });
   const { selectedCartItems } = useOrderListContext(cartListData);
-  const { shippingFee, totalPrice, totalCartPrice } = useOrderCalculation(selectedCartItems);
+  const { shippingFee, totalPrice, totalCartPrice } = calculateOrders(selectedCartItems).getBasicOrderPrice();
   const InfoTextContent = ` 총 주문 금액이 ${formatKRWString(
     FREE_SHIPPING_STANDARD
   )} 이상일 경우
@@ -19641,7 +19780,6 @@ const ShoppingCartPage = () => {
       navigate("/order-confirm");
     }
   };
-  useScrollToTop();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { left: "SHOP" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CartLayout, {}),
@@ -19699,6 +19837,15 @@ const SuccessConfirmPage = () => {
   const navigateToCart = () => {
     navigate("/");
   };
+  reactExports.useEffect(() => {
+    if (!location.state) {
+      alert("잘못된 접근입니다. 장바구니 페이지로 돌아갑니다.");
+      navigate("/", { replace: true });
+    }
+  }, [location.state, navigate]);
+  if (!location.state) {
+    return null;
+  }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Header, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Flex, { justifyContent: "center", alignItems: "center", gap: "lg", children: [
@@ -19759,36 +19906,39 @@ const PayButton = newStyled.button`
 function App() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Global, { styles: reset }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename: getBrowserBaseUrl(), children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Route,
-        {
-          path: "/",
-          element: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {}) })
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Route,
-        {
-          path: "/order-confirm",
-          element: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderConfirmPage, {}) })
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Route,
-        {
-          path: "*",
-          element: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { children: "Page Not Found" }) })
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Route,
-        {
-          path: "/success-confirm",
-          element: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SuccessConfirmPage, {}) })
-        }
-      )
-    ] }) }) }) }) }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(MobileLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIDataProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderListProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(BrowserRouter, { basename: getBrowserBaseUrl(), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollToTopOnRouteChange, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Routes, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Route,
+          {
+            path: "/",
+            element: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ShoppingCartPage, {}) })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Route,
+          {
+            path: "/order-confirm",
+            element: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(OrderConfirmPage, {}) })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Route,
+          {
+            path: "*",
+            element: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { children: "Page Not Found" }) })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Route,
+          {
+            path: "/success-confirm",
+            element: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SuccessConfirmPage, {}) })
+          }
+        )
+      ] })
+    ] }) }) }) }) })
   ] });
 }
 ReactDOM.createRoot(document.getElementById("root")).render(
