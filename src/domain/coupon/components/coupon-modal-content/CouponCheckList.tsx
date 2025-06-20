@@ -8,6 +8,7 @@ import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 import { isCouponAvailable } from "../../utils/couponValidation";
 import { getCouponDetails } from "../../utils/getCouponDetails";
+import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
 
 function CouponCheckList({
   couponsResource,
@@ -17,10 +18,11 @@ function CouponCheckList({
   const coupons = use(couponsResource);
   const { selectedCartData } = useOrderCartList();
   const hasShownToast = useRef(false);
+  const { payInfo } = usePayInfoContext();
 
-  const { totalCartPrice, shippingFee } =
-    calculateOrders(selectedCartData).getBasicOrderPrice();
-  // isIsland 넣어야됨
+  const { totalCartPrice, shippingFee } = calculateOrders(
+    selectedCartData
+  ).getBasicOrderPrice(payInfo.isIsland);
 
   const { initializeCoupons } = useCouponContext();
   const { showToast } = useToastContext();

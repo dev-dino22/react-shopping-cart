@@ -1,16 +1,10 @@
 import { BasicModal } from "@dev-dino22/modal-components";
-import { useState } from "react";
 import Button from "../../../../components/common/inputs/Button";
+import { useBoolean } from "../../../../hooks/useBoolean";
 import CouponModalContent from "../../../coupon/components/coupon-modal-content/CouponModalContent";
 
 function CouponModalButton() {
-  const [isOpen, setIsOpen] = useState(false);
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
-  const handleClose = () => {
-    setIsOpen(false);
-  };
+  const [isOpen, handleOpen, handleClose] = useBoolean(false);
   return (
     <>
       <Button onClick={handleOpen}>쿠폰 적용</Button>

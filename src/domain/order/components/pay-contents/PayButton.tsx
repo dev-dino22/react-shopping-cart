@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";
+import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
 
 function PayButton() {
   const { selectedCartData } = useOrderCartList();
   const { selectedCoupons } = useCouponContext();
-  const { totalPrice, typeCount, totalCount } =
-    calculateOrders(selectedCartData).getOrderPriceWithCoupon(selectedCoupons);
-  // isIsland 넣어야됨
+  const { payInfo } = usePayInfoContext();
+  const { totalPrice, typeCount, totalCount } = calculateOrders(
+    selectedCartData
+  ).getOrderPriceWithCoupon(selectedCoupons, payInfo.isIsland);
 
   const navigate = useNavigate();
   const navigateToSuccessPage = () => {

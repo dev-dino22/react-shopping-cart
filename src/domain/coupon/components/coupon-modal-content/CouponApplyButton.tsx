@@ -5,6 +5,7 @@ import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
+import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
 
 function CouponApplyButton({
   onClose,
@@ -14,15 +15,15 @@ function CouponApplyButton({
 }) {
   const { selectedCartData } = useOrderCartList();
   const { selectedCoupons } = useCouponContext();
-  const { finalDiscount } =
-    calculateOrders(selectedCartData).getOrderPriceWithCoupon(selectedCoupons);
-
-  // isIsland 넣어야됨
+  const { payInfo, setDiscount } = usePayInfoContext();
+  const { finalDiscount } = calculateOrders(
+    selectedCartData
+  ).getOrderPriceWithCoupon(selectedCoupons, payInfo.isIsland);
 
   const { showToast } = useToastContext();
 
   const handleCouponApply = useCallback(() => {
-    // handleDiscountSetting(finalDiscount);
+    setDiscount(finalDiscount);
     showToast("쿠폰이 적용되었습니다.", "info");
     onClose();
   }, [onClose, finalDiscount, showToast]);

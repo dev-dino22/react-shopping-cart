@@ -5,29 +5,38 @@ import { useCouponContext } from "../../../../pages/order-confirm/context/Coupon
 import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";
 import OrderLabelPridce from "../order-contents/OrderLabelPrice";
+import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
 
 function DeliveryInfo() {
   const { selectedCartData } = useOrderCartList();
   const { selectedCoupons } = useCouponContext();
+  const { payInfo, handleIsIslandToggle } = usePayInfoContext();
 
-  const { totalCartPrice, finalShippingFee, totalPrice, finalDiscount } =
-    calculateOrders(selectedCartData).getOrderPriceWithCoupon(selectedCoupons);
-  // isIsland 넣어야됨
+  const {
+    totalCartPrice,
+    finalShippingFee,
+    shippingFee,
+    totalPrice,
+    finalDiscount,
+  } = calculateOrders(selectedCartData).getOrderPriceWithCoupon(
+    selectedCoupons,
+    payInfo.isIsland
+  );
+
+  console.log("finalShippingFee: ", finalShippingFee);
 
   return (
     <Container alignItems="flex-start" gap="xs">
       <Title>배송 정보</Title>
       <CheckboxLabel
-        isChecked={false}
-        onToggle={() => {
-          console.log("isIsland 넣어야됨");
-        }}
+        isChecked={payInfo.isIsland}
+        onToggle={handleIsIslandToggle}
       >
         제주도 및 도서 산간 지역
       </CheckboxLabel>
       <OrderLabelPridce
         totalCartPrice={totalCartPrice}
-        shippingFee={finalShippingFee}
+        shippingFee={shippingFee}
         totalPrice={totalPrice}
         couponDiscount={-finalDiscount}
       />
