@@ -1,13 +1,9 @@
 import styled from "@emotion/styled";
-import { getShoppingCartData } from "../../../../../api/cart";
 import { Flex } from "../../../../../components/common";
-import { useAPIDataContext } from "../../../../../context/APIDataProvider";
+import { useCartAPIData } from "../../../hooks/useCartAPIData";
 
 const CartTitle = () => {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
 
   return (
     <Flex gap="sm" alignItems="flex-start">

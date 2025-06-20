@@ -5,7 +5,7 @@ import {
   FREE_SHIPPING_STANDARD,
   ISLAND_SHIPPING_FEE,
   SHIPPING_FEE,
-} from "../hooks/OrderConstants";
+} from "../consts/OrderConstants";
 
 type OrderBase = {
   typeCount: number;

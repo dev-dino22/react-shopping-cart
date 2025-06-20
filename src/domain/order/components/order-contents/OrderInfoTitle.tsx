@@ -1,16 +1,12 @@
 import styled from "@emotion/styled";
-import { getShoppingCartData } from "../../../../api/cart";
 import { Flex } from "../../../../components/common";
-import { useAPIDataContext } from "../../../../context/APIDataProvider";
-import { useOrderListContext } from "../../context/OrderListProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
+import { useOrderListContext } from "../../context/OrderListProvider";
+import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
 import { calculateOrders } from "../../utils/calculateOrders";
 
 function OrderInfoTitle() {
-  const { data: cartListData } = useAPIDataContext({
-    name: "cart",
-    fetcher: getShoppingCartData,
-  });
+  const { cartListData } = useCartAPIData();
   const { selectedCartItems } = useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();
   const { typeCount, totalCount } =

@@ -1,16 +1,12 @@
 import styled from "@emotion/styled";
 import CheckBox from "../../../../../components/common/inputs/CheckBox";
 import { useOrderListContext } from "../../../../order/context/OrderListProvider";
+import { useCartAPIData } from "../../../hooks/useCartAPIData";
 import EmptyCartBox from "./EmptyCartBox";
 import CartCheckItem from "./cart-check-item/CartCheckItem";
-import { useAPIDataContext } from "../../../../../context/APIDataProvider";
-import { getShoppingCartData } from "../../../../../api/cart";
 
 function CartCheckList() {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
   const { selectedCartItems, setSelectedCartItems } =
     useOrderListContext(cartListData);
 

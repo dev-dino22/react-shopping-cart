@@ -1,13 +1,9 @@
-import { getShoppingCartData } from "../../../../../../api/cart";
 import CheckBox from "../../../../../../components/common/inputs/CheckBox";
-import { useAPIDataContext } from "../../../../../../context/APIDataProvider";
 import { useOrderListContext } from "../../../../../order/context/OrderListProvider";
+import { useCartAPIData } from "../../../../hooks/useCartAPIData";
 
 function CartItemCheckbox({ cartId }: { cartId: string }) {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
   const { selectedCartItems, setSelectedCartItems } =
     useOrderListContext(cartListData);
 

@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { Flex } from "../../../../components/common";
 import LabelPrice from "../../../../components/common/text/LabelPrice";
-import { FREE_SHIPPING_STANDARD } from "../../hooks/OrderConstants";
+import { FREE_SHIPPING_STANDARD } from "../../consts/OrderConstants";
 import { formatKRWString } from "../../../../utils/formatKRWString";
 import InfoText from "../../../../components/common/text/InfoText";
 

@@ -1,16 +1,12 @@
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router-dom";
-import { getShoppingCartData } from "../../api/cart";
 import { Header } from "../../components/common";
-import { useAPIDataContext } from "../../context/APIDataProvider";
-import { useOrderListContext } from "../../domain/order/context/OrderListProvider";
 import CartLayout from "../../domain/cart/components/cart-layout/CartLayout";
+import { useOrderListContext } from "../../domain/order/context/OrderListProvider";
+import { useCartAPIData } from "../../domain/cart/hooks/useCartAPIData";
 
 const ShoppingCartPage = () => {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
 
   const { selectedCartItems } = useOrderListContext(cartListData);
   const isDisabled = selectedCartItems.length === 0;

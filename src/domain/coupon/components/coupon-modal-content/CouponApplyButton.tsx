@@ -1,11 +1,10 @@
 import { useCallback } from "react";
-import { getShoppingCartData } from "../../../../api/cart";
 import { Coupon } from "../../../../api/coupon";
 import Button from "../../../../components/common/inputs/Button";
-import { useAPIDataContext } from "../../../../context/APIDataProvider";
-import { useOrderListContext } from "../../../order/context/OrderListProvider";
 import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
+import { useOrderListContext } from "../../../order/context/OrderListProvider";
+import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 
 function CouponApplyButton({
@@ -14,10 +13,7 @@ function CouponApplyButton({
   onClose: () => void;
   couponsResource: Promise<Coupon[]>;
 }) {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
   const { selectedCartItems, isIsland, handleDiscountSetting } =
     useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();

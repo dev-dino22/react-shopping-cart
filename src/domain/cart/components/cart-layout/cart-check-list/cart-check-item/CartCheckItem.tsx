@@ -1,13 +1,9 @@
 import styled from "@emotion/styled";
-import {
-  Cart,
-  deleteCartItem,
-  getShoppingCartData,
-} from "../../../../../../api/cart";
+import { Cart, deleteCartItem } from "../../../../../../api/cart";
 import Image from "../../../../../../components/common/assets/Image";
-import { useAPIDataContext } from "../../../../../../context/APIDataProvider";
 import { useToastContext } from "../../../../../../context/ToastProvider";
 import { formatKRWString } from "../../../../../../utils/formatKRWString";
+import { useCartAPIData } from "../../../../hooks/useCartAPIData";
 import CartItemCheckbox from "./CartItemCheckbox";
 import CartItemCounter from "./CartItemCounter";
 
@@ -16,10 +12,7 @@ interface CartCheckItemProps {
 }
 
 function CartCheckItem({ cart }: CartCheckItemProps) {
-  const { refetch: cartRefetch } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartRefetch } = useCartAPIData();
   const { showToast } = useToastContext();
 
   const removeItem = async (id: string) => {

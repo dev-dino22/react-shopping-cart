@@ -1,12 +1,11 @@
 import styled from "@emotion/styled";
 import { use, useEffect, useRef } from "react";
-import { getShoppingCartData } from "../../../../api/cart";
 import { Coupon } from "../../../../api/coupon";
 import CouponCheckItem from "../../../../components/common/coupon/CouponCheckItem";
-import { useAPIDataContext } from "../../../../context/APIDataProvider";
-import { useOrderListContext } from "../../../order/context/OrderListProvider";
 import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
+import { useOrderListContext } from "../../../order/context/OrderListProvider";
+import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 import { isCouponAvailable } from "../../utils/couponValidation";
 import { getCouponDetails } from "../../utils/getCouponDetails";
@@ -17,10 +16,7 @@ function CouponCheckList({
   couponsResource: Promise<Coupon[]>;
 }) {
   const coupons = use(couponsResource);
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
   const { selectedCartItems, isIsland } = useOrderListContext(cartListData);
   const hasShownToast = useRef(false);
 

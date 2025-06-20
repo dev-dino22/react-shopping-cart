@@ -1,16 +1,12 @@
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router-dom";
-import { getShoppingCartData } from "../../../../api/cart";
-import { useAPIDataContext } from "../../../../context/APIDataProvider";
-import { useOrderListContext } from "../../context/OrderListProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
+import { useOrderListContext } from "../../context/OrderListProvider";
+import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
 import { calculateOrders } from "../../utils/calculateOrders";
 
 function PayButton() {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
   const { selectedCartItems, isIsland } = useOrderListContext(cartListData);
   const { selectedCoupons } = useCouponContext();
   const { totalPrice, typeCount, totalCount } = calculateOrders(

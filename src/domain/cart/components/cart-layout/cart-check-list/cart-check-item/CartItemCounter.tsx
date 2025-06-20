@@ -1,22 +1,15 @@
-import {
-  Cart,
-  getShoppingCartData,
-  patchCartItem,
-} from "../../../../../../api/cart";
+import { Cart, patchCartItem } from "../../../../../../api/cart";
 import Counter from "../../../../../../components/common/inputs/Counter";
-import { useAPIDataContext } from "../../../../../../context/APIDataProvider";
-import { useOrderListContext } from "../../../../../order/context/OrderListProvider";
 import { useToastContext } from "../../../../../../context/ToastProvider";
+import { useOrderListContext } from "../../../../../order/context/OrderListProvider";
+import { useCartAPIData } from "../../../../hooks/useCartAPIData";
 
 interface CartItemCounterProps {
   cart: Cart;
 }
 
 function CartItemCounter({ cart }: CartItemCounterProps) {
-  const { data: cartListData, refetch: cartRefetch } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData, cartRefetch } = useCartAPIData();
 
   const { setSelectedCartItems } = useOrderListContext(cartListData);
   const { showToast } = useToastContext();

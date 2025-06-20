@@ -1,15 +1,11 @@
 import styled from "@emotion/styled";
-import { getShoppingCartData } from "../../../../api/cart";
-import { useAPIDataContext } from "../../../../context/APIDataProvider";
-import { useOrderListContext } from "../../context/OrderListProvider";
 import Image from "../../../../components/common/assets/Image";
 import { formatKRWString } from "../../../../utils/formatKRWString";
+import { useOrderListContext } from "../../context/OrderListProvider";
+import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
 
 function OrderList() {
-  const { data: cartListData } = useAPIDataContext({
-    fetcher: getShoppingCartData,
-    name: "cart",
-  });
+  const { cartListData } = useCartAPIData();
   const { orderIdList } = useOrderListContext(cartListData);
 
   return (
