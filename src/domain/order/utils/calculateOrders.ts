@@ -47,26 +47,28 @@ const withCoupons = (
 
 const calculateTotal = (state: {
   totalCartPrice: number;
-  finalShippingFee: number;
+  shippingFee: number;
   finalDiscount: number;
 }) => ({
-  totalPrice:
-    state.totalCartPrice + state.finalShippingFee - state.finalDiscount,
+  totalPrice: state.totalCartPrice + state.shippingFee - state.finalDiscount,
 });
 
 export const calculateOrders = (selectedCartItems: Cart[]) => {
   const base = getOrderBase(selectedCartItems);
 
   return {
-    getBasicOrderPrice: (isIsland = false) => ({
-      ...base,
-      ...withShipping(base, isIsland),
-      ...calculateTotal({
-        totalCartPrice: base.totalCartPrice,
-        finalShippingFee: withShipping(base, isIsland).shippingFee,
-        finalDiscount: 0,
-      }),
-    }),
+    getBasicOrderPrice: (isIsland = false) => {
+      const { shippingFee } = withShipping(base, isIsland);
+      return {
+        ...base,
+        ...withShipping(base, isIsland),
+        ...calculateTotal({
+          totalCartPrice: base.totalCartPrice,
+          shippingFee,
+          finalDiscount: 0,
+        }),
+      };
+    },
 
     getOrderPriceWithCoupon: (coupons: Coupon[] = [], isIsland = false) => {
       const withShippingFee = withShipping(base, isIsland);
