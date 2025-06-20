@@ -12,18 +12,11 @@ function DeliveryInfo() {
   const { selectedCoupons } = useCouponContext();
   const { payInfo, handleIsIslandToggle } = usePayInfoContext();
 
-  const {
-    totalCartPrice,
-    finalShippingFee,
-    shippingFee,
-    totalPrice,
-    finalDiscount,
-  } = calculateOrders(selectedCartData).getOrderPriceWithCoupon(
-    selectedCoupons,
-    payInfo.isIsland
-  );
-
-  console.log("finalShippingFee: ", finalShippingFee);
+  const { totalCartPrice, shippingFee, totalPrice, finalDiscount } =
+    calculateOrders(selectedCartData).getOrderPriceWithCoupon(
+      selectedCoupons,
+      payInfo.isIsland
+    );
 
   return (
     <Container alignItems="flex-start" gap="xs">
