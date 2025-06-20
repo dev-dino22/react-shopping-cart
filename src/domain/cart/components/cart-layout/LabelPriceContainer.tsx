@@ -3,17 +3,15 @@ import Flex from "../../../../components/common/styled/Flex";
 import InfoText from "../../../../components/common/text/InfoText";
 import LabelPrice from "../../../../components/common/text/LabelPrice";
 import { formatKRWString } from "../../../../utils/formatKRWString";
-import { useOrderListContext } from "../../../order/context/OrderListProvider";
 import { FREE_SHIPPING_STANDARD } from "../../../order/consts/OrderConstants";
-import { useCartAPIData } from "../../hooks/useCartAPIData";
+import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 
 const LabelPriceContainer = () => {
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems } = useOrderListContext(cartListData);
+  const { selectedCartData } = useOrderCartList();
 
   const { shippingFee, totalPrice, totalCartPrice } =
-    calculateOrders(selectedCartItems).getBasicOrderPrice();
+    calculateOrders(selectedCartData).getBasicOrderPrice();
 
   const InfoTextContent = ` 총 주문 금액이 ${formatKRWString(
     FREE_SHIPPING_STANDARD

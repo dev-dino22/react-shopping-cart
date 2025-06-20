@@ -3,8 +3,7 @@ import { Coupon } from "../../../../api/coupon";
 import Button from "../../../../components/common/inputs/Button";
 import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
-import { useOrderListContext } from "../../../order/context/OrderListProvider";
-import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
+import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 
 function CouponApplyButton({
@@ -13,21 +12,20 @@ function CouponApplyButton({
   onClose: () => void;
   couponsResource: Promise<Coupon[]>;
 }) {
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems, isIsland, handleDiscountSetting } =
-    useOrderListContext(cartListData);
+  const { selectedCartData } = useOrderCartList();
   const { selectedCoupons } = useCouponContext();
-  const { finalDiscount } = calculateOrders(
-    selectedCartItems
-  ).getOrderPriceWithCoupon(selectedCoupons, isIsland);
+  const { finalDiscount } =
+    calculateOrders(selectedCartData).getOrderPriceWithCoupon(selectedCoupons);
+
+  // isIsland 넣어야됨
 
   const { showToast } = useToastContext();
 
   const handleCouponApply = useCallback(() => {
-    handleDiscountSetting(finalDiscount);
+    // handleDiscountSetting(finalDiscount);
     showToast("쿠폰이 적용되었습니다.", "info");
     onClose();
-  }, [onClose, handleDiscountSetting, finalDiscount, showToast]);
+  }, [onClose, finalDiscount, showToast]);
 
   return (
     <Button

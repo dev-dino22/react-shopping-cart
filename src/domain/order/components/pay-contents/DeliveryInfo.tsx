@@ -2,27 +2,27 @@ import styled from "@emotion/styled";
 import { Flex } from "../../../../components/common";
 import CheckboxLabel from "../../../../components/common/inputs/CheckboxLabel";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
-import { useOrderListContext } from "../../context/OrderListProvider";
-import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
+import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";
 import OrderLabelPridce from "../order-contents/OrderLabelPrice";
 
 function DeliveryInfo() {
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems, isIsland, handleIsIslandToggle } =
-    useOrderListContext(cartListData);
+  const { selectedCartData } = useOrderCartList();
   const { selectedCoupons } = useCouponContext();
 
   const { totalCartPrice, finalShippingFee, totalPrice, finalDiscount } =
-    calculateOrders(selectedCartItems).getOrderPriceWithCoupon(
-      selectedCoupons,
-      isIsland
-    );
+    calculateOrders(selectedCartData).getOrderPriceWithCoupon(selectedCoupons);
+  // isIsland 넣어야됨
 
   return (
     <Container alignItems="flex-start" gap="xs">
       <Title>배송 정보</Title>
-      <CheckboxLabel isChecked={isIsland} onToggle={handleIsIslandToggle}>
+      <CheckboxLabel
+        isChecked={false}
+        onToggle={() => {
+          console.log("isIsland 넣어야됨");
+        }}
+      >
         제주도 및 도서 산간 지역
       </CheckboxLabel>
       <OrderLabelPridce

@@ -1,16 +1,14 @@
 import styled from "@emotion/styled";
 import Image from "../../../../components/common/assets/Image";
 import { formatKRWString } from "../../../../utils/formatKRWString";
-import { useOrderListContext } from "../../context/OrderListProvider";
-import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
+import { useOrderCartList } from "../../hooks/useOrderCartList";
 
 function OrderList() {
-  const { cartListData } = useCartAPIData();
-  const { orderIdList } = useOrderListContext(cartListData);
+  const { cartListData, selectedCartIds } = useOrderCartList();
 
   return (
     <Container>
-      {orderIdList.map((id) => {
+      {selectedCartIds.map((id) => {
         const cart = (cartListData ?? []).find((cart) => cart.id === id);
         if (!cart) return null;
         return (

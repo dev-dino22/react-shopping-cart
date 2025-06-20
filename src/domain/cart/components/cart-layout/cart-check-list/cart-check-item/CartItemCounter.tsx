@@ -1,17 +1,14 @@
 import { Cart, patchCartItem } from "../../../../../../api/cart";
 import Counter from "../../../../../../components/common/inputs/Counter";
 import { useToastContext } from "../../../../../../context/ToastProvider";
-import { useOrderListContext } from "../../../../../order/context/OrderListProvider";
-import { useCartAPIData } from "../../../../hooks/useCartAPIData";
+import { useOrderCartList } from "../../../../../order/hooks/useOrderCartList";
 
 interface CartItemCounterProps {
   cart: Cart;
 }
 
 function CartItemCounter({ cart }: CartItemCounterProps) {
-  const { cartListData, cartRefetch } = useCartAPIData();
-
-  const { setSelectedCartItems } = useOrderListContext(cartListData);
+  const { cartListData, cartRefetch } = useOrderCartList();
   const { showToast } = useToastContext();
 
   const handlePlusQuantity = async (cartId: string) => {
@@ -21,12 +18,6 @@ function CartItemCounter({ cart }: CartItemCounterProps) {
       if (!cart) throw new Error("장바구니에 해당 아이템이 없습니다.");
       await patchCartItem(cartId, cart.quantity + 1);
       await cartRefetch();
-
-      setSelectedCartItems((prev) =>
-        prev.map((item) =>
-          item.id === cartId ? { ...item, quantity: item.quantity + 1 } : item
-        )
-      );
     } catch (e) {
       showToast("장바구니에 추가하는 데 실패했습니다.", "error");
     }
@@ -39,12 +30,6 @@ function CartItemCounter({ cart }: CartItemCounterProps) {
       if (!cart) throw new Error("장바구니에 해당 아이템이 없습니다.");
       await patchCartItem(cartId, cart.quantity - 1);
       await cartRefetch();
-
-      setSelectedCartItems((prev) =>
-        prev.map((item) =>
-          item.id === cartId ? { ...item, quantity: item.quantity - 1 } : item
-        )
-      );
     } catch (e) {
       showToast("장바구니에서 뺴는 데 실패했습니다.", "error");
     }

@@ -4,8 +4,7 @@ import { Coupon } from "../../../../api/coupon";
 import CouponCheckItem from "../../../../components/common/coupon/CouponCheckItem";
 import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
-import { useOrderListContext } from "../../../order/context/OrderListProvider";
-import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
+import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 import { isCouponAvailable } from "../../utils/couponValidation";
 import { getCouponDetails } from "../../utils/getCouponDetails";
@@ -16,12 +15,12 @@ function CouponCheckList({
   couponsResource: Promise<Coupon[]>;
 }) {
   const coupons = use(couponsResource);
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems, isIsland } = useOrderListContext(cartListData);
+  const { selectedCartData } = useOrderCartList();
   const hasShownToast = useRef(false);
 
   const { totalCartPrice, shippingFee } =
-    calculateOrders(selectedCartItems).getBasicOrderPrice(isIsland);
+    calculateOrders(selectedCartData).getBasicOrderPrice();
+  // isIsland 넣어야됨
 
   const { initializeCoupons } = useCouponContext();
   const { showToast } = useToastContext();
@@ -32,7 +31,7 @@ function CouponCheckList({
         coupons,
         totalCartPrice,
         shippingFee,
-        selectedCartItems
+        selectedCartData
       );
 
       if (hasSelectedCoupons) {
@@ -49,7 +48,7 @@ function CouponCheckList({
           const isAvailable = isCouponAvailable(
             coupon,
             totalCartPrice,
-            selectedCartItems
+            selectedCartData
           );
           return (
             <CouponCheckItem

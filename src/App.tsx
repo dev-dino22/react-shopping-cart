@@ -3,15 +3,15 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { MobileLayout } from "./components/common";
 import { ScrollToTopOnRouteChange } from "./components/common/layout/ScrollToTopOnRouteChange";
-import { APIDataProvider } from "./context/APIDataProvider";
-import reset from "./style/reset";
-import OrderConfirmPage from "./pages/order-confirm/OrderConfirmPage";
-import { OrderListProvider } from "./domain/order/context/OrderListProvider";
-import ShoppingCartPage from "./pages/shopping-cart/ShoppingCartPage";
-import { getBrowserBaseUrl } from "./utils/getBrowserBaseUrl";
 import ErrorBoundary from "./components/features/error-boundary/ErrorBoundary";
-import SuccessConfirmPage from "./pages/success-confirm/SuccessConfirmPage";
+import { APIDataProvider } from "./context/APIDataProvider";
 import { ToastProvider } from "./context/ToastProvider";
+import { SelectedCartIdsProvider } from "./domain/order/context/SelectedCartIdsProvider";
+import OrderConfirmPage from "./pages/order-confirm/OrderConfirmPage";
+import ShoppingCartPage from "./pages/shopping-cart/ShoppingCartPage";
+import SuccessConfirmPage from "./pages/success-confirm/SuccessConfirmPage";
+import reset from "./style/reset";
+import { getBrowserBaseUrl } from "./utils/getBrowserBaseUrl";
 
 function App() {
   return (
@@ -20,7 +20,7 @@ function App() {
       <MobileLayout>
         <ToastProvider>
           <APIDataProvider>
-            <OrderListProvider>
+            <SelectedCartIdsProvider>
               <BrowserRouter basename={getBrowserBaseUrl()}>
                 <ScrollToTopOnRouteChange />
                 <Routes>
@@ -58,7 +58,7 @@ function App() {
                   />
                 </Routes>
               </BrowserRouter>
-            </OrderListProvider>
+            </SelectedCartIdsProvider>
           </APIDataProvider>
         </ToastProvider>
       </MobileLayout>

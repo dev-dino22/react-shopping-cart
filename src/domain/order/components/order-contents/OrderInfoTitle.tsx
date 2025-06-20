@@ -1,16 +1,14 @@
 import styled from "@emotion/styled";
 import { Flex } from "../../../../components/common";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
-import { useOrderListContext } from "../../context/OrderListProvider";
-import { useCartAPIData } from "../../../cart/hooks/useCartAPIData";
+import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";
 
 function OrderInfoTitle() {
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems } = useOrderListContext(cartListData);
+  const { selectedCartData } = useOrderCartList();
   const { selectedCoupons } = useCouponContext();
   const { typeCount, totalCount } =
-    calculateOrders(selectedCartItems).getOrderPriceWithCoupon(selectedCoupons);
+    calculateOrders(selectedCartData).getOrderPriceWithCoupon(selectedCoupons);
 
   return (
     <Flex justifyContent="flex-start" alignItems="flex-start" gap="xs">

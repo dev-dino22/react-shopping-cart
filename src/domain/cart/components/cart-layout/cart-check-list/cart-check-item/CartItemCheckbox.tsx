@@ -1,31 +1,24 @@
 import CheckBox from "../../../../../../components/common/inputs/CheckBox";
-import { useOrderListContext } from "../../../../../order/context/OrderListProvider";
-import { useCartAPIData } from "../../../../hooks/useCartAPIData";
+import { useOrderCartList } from "../../../../../order/hooks/useOrderCartList";
 
 function CartItemCheckbox({ cartId }: { cartId: string }) {
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems, setSelectedCartItems } =
-    useOrderListContext(cartListData);
+  const { selectedCartData, handleAddCartId, handleDeleteCartId } =
+    useOrderCartList();
 
-  const isChecked = selectedCartItems.some((item) => item.id === cartId);
+  const isChecked = selectedCartData.some((item) => item.id === cartId);
 
-  const handleToggleSelection = (cartId: string) => {
-    setSelectedCartItems((prev) => {
-      const cart = cartListData?.find((item) => item.id === cartId);
-      if (!cart) return prev;
-
-      if (isChecked) {
-        return prev.filter((item) => item.id !== cartId);
-      } else {
-        return [...prev, cart];
-      }
-    });
+  const handleToggleSelection = () => {
+    if (isChecked) {
+      handleDeleteCartId(cartId);
+    } else {
+      handleAddCartId(cartId);
+    }
   };
 
   return (
     <CheckBox
       isChecked={isChecked}
-      onToggle={() => handleToggleSelection(cartId)}
+      onToggle={() => handleToggleSelection()}
       role={"cart-item-checkbox"}
       aria-checked={isChecked}
     />

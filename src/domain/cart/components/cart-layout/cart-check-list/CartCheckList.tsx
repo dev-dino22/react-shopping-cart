@@ -1,26 +1,28 @@
 import styled from "@emotion/styled";
 import CheckBox from "../../../../../components/common/inputs/CheckBox";
-import { useOrderListContext } from "../../../../order/context/OrderListProvider";
-import { useCartAPIData } from "../../../hooks/useCartAPIData";
+import { useOrderCartList } from "../../../../order/hooks/useOrderCartList";
 import EmptyCartBox from "./EmptyCartBox";
 import CartCheckItem from "./cart-check-item/CartCheckItem";
 
 function CartCheckList() {
-  const { cartListData } = useCartAPIData();
-  const { selectedCartItems, setSelectedCartItems } =
-    useOrderListContext(cartListData);
+  const {
+    cartListData,
+    selectedCartData,
+    handleReplaceCartIds,
+    handleClearSelectedCartIds,
+  } = useOrderCartList();
 
   const isCartEmpty = !cartListData || cartListData.length === 0;
 
-  const isSelectAll = cartListData?.length === selectedCartItems.length;
+  const isSelectAll = cartListData?.length === selectedCartData.length;
 
   const handleSelectAll = () => {
     if (!cartListData) return;
 
     if (isSelectAll) {
-      setSelectedCartItems([]);
+      handleClearSelectedCartIds();
     } else {
-      setSelectedCartItems([...cartListData]);
+      handleReplaceCartIds(cartListData.map((cart) => cart.id));
     }
   };
 
