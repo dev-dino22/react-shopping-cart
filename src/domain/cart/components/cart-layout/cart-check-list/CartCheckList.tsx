@@ -6,11 +6,13 @@ import CartCheckItem from "./cart-check-item/CartCheckItem";
 
 function CartCheckList() {
   const {
-    cartListData,
+    suspenseCartData,
     selectedCartData,
     handleReplaceCartIds,
     handleClearSelectedCartIds,
   } = useOrderCartList();
+
+  const cartListData = suspenseCartData();
 
   const isCartEmpty = !cartListData || cartListData.length === 0;
 
@@ -41,7 +43,7 @@ function CartCheckList() {
         {isCartEmpty ? (
           <EmptyCartBox />
         ) : (
-          cartListData?.map((cart) => (
+          (cartListData ?? []).map((cart) => (
             <CartCheckItem key={cart.id} cart={cart} />
           ))
         )}

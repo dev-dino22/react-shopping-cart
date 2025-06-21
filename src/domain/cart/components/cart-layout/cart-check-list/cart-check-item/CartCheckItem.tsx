@@ -1,24 +1,23 @@
 import styled from "@emotion/styled";
-import { Cart, deleteCartItem } from "../../../../../../api/cart";
+import { Cart } from "../../../../../../api/cart";
 import Image from "../../../../../../components/assets/Image";
 import { useToastContext } from "../../../../../../context/ToastProvider";
 import { formatKRWString } from "../../../../../../utils/formatKRWString";
-import { useCartAPIData } from "../../../../hooks/useCartAPIData";
 import CartItemCheckbox from "./CartItemCheckbox";
 import CartItemCounter from "./CartItemCounter";
+import { useOrderCartList } from "../../../../../order/hooks/useOrderCartList";
 
 interface CartCheckItemProps {
   cart: Cart;
 }
 
 function CartCheckItem({ cart }: CartCheckItemProps) {
-  const { cartRefetch } = useCartAPIData();
+  const { deleteCartStoreItem } = useOrderCartList();
   const { showToast } = useToastContext();
 
   const removeItem = async (id: string) => {
     try {
-      await deleteCartItem(id);
-      await cartRefetch();
+      deleteCartStoreItem(id);
     } catch (e) {
       showToast("장바구니 아이템 삭제에 실패했습니다.", "error");
     }

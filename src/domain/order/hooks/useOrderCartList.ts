@@ -1,36 +1,28 @@
-import { useEffect, useMemo } from "react";
-import { useCartAPIData } from "../../cart/hooks/useCartAPIData";
+import { useCallback, useMemo } from "react";
+import { useCartStore } from "../../../store/hooks/useCartStore";
 import { useSelectedCartIdsContext } from "../context/SelectedCartIdsProvider";
 
 export function useOrderCartList() {
-  const { cartListData, cartRefetch } = useCartAPIData();
-  const {
-    selectedCartIds,
-    handleAddCartId,
-    handleDeleteCartId,
-    handleReplaceCartIds,
-    handleClearSelectedCartIds,
-    syncSelectedIdsWithData,
-  } = useSelectedCartIdsContext();
-
-  useEffect(() => {
-    if (!cartListData) return;
-    syncSelectedIdsWithData(cartListData);
-  }, [cartListData, syncSelectedIdsWithData]);
+  const { cartListData, ...cartActions } = useCartStore();
+  const { selectedCartIds, ...selectionActions } = useSelectedCartIdsContext();
 
   const selectedCartData = useMemo(() => {
-    if (!cartListData) return [];
-    return cartListData.filter((cart) => selectedCartIds.includes(cart.id));
+    return (
+      cartListData?.filter((cart) => selectedCartIds.includes(cart.id)) ?? []
+    );
   }, [cartListData, selectedCartIds]);
+
+  const syncSelectedIds = useCallback(() => {
+    if (!cartListData) return;
+    selectionActions.syncSelectedIdsWithData(cartListData);
+  }, [cartListData, selectionActions]);
 
   return {
     cartListData,
-    cartRefetch,
-    selectedCartIds,
-    handleAddCartId,
-    handleDeleteCartId,
-    handleReplaceCartIds,
-    handleClearSelectedCartIds,
     selectedCartData,
+    selectedCartIds,
+    ...cartActions,
+    ...selectionActions,
+    syncSelectedIds,
   };
 }

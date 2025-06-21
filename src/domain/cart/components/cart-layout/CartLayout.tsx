@@ -1,24 +1,27 @@
 import styled from "@emotion/styled";
-import { Flex } from "../../../../components";
-import { useCartAPIData } from "../../hooks/useCartAPIData";
+import { Suspense } from "react";
+import { Flex, Loading } from "../../../../components";
 import CartCheckList from "./cart-check-list/CartCheckList";
 import CartTitle from "./cart-check-list/CartTitle";
 import LabelPriceContainer from "./LabelPriceContainer";
+import ErrorBoundary from "../../../error-boundary/ErrorBoundary";
 
 const CartLayout = () => {
-  const { cartListData } = useCartAPIData();
-
   return (
     <Container>
       <CartTitle />
-      {cartListData && cartListData.length === 0 ? (
-        <NoCartItem>장바구니에 아이템이 없습니다.</NoCartItem>
-      ) : (
-        <>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <LoadingContainer>
+              <Loading />
+            </LoadingContainer>
+          }
+        >
           <CartCheckList />
           <LabelPriceContainer />
-        </>
-      )}
+        </Suspense>
+      </ErrorBoundary>
     </Container>
   );
 };
@@ -29,7 +32,7 @@ const Container = styled(Flex)`
   padding: 36px 24px;
 `;
 
-const NoCartItem = styled.div`
+const LoadingContainer = styled.div`
   width: 100%;
   height: 600px;
   display: flex;

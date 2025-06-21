@@ -1,9 +1,9 @@
 import styled from "@emotion/styled";
 import { Flex } from "../../../../../components";
-import { useCartAPIData } from "../../../hooks/useCartAPIData";
+import { useOrderCartList } from "../../../../order/hooks/useOrderCartList";
 
 const CartTitle = () => {
-  const { cartListData } = useCartAPIData();
+  const { cartListData } = useOrderCartList();
 
   return (
     <Flex gap="sm" alignItems="flex-start">
