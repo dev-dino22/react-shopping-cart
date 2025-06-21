@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { MobileLayout } from "./components/common";
 import { ScrollToTopOnRouteChange } from "./components/common/layout/ScrollToTopOnRouteChange";
-import ErrorBoundary from "./components/features/error-boundary/ErrorBoundary";
+import ErrorBoundary from "./domain/error-boundary/ErrorBoundary";
 import { APIDataProvider } from "./context/APIDataProvider";
 import { ToastProvider } from "./context/ToastProvider";
 import { SelectedCartIdsProvider } from "./domain/order/context/SelectedCartIdsProvider";
