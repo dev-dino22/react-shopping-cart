@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";
-import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
+import { usePayInfoContext } from "./context/PayInfoProvider";
 
 function PayButton() {
   const { selectedCartData } = useOrderCartList();

@@ -5,7 +5,7 @@ import { useCouponContext } from "../../../../pages/order-confirm/context/Coupon
 import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";
 import OrderLabelPridce from "../order-contents/OrderLabelPrice";
-import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
+import { usePayInfoContext } from "./context/PayInfoProvider";
 
 function DeliveryInfo() {
   const { selectedCartData } = useOrderCartList();

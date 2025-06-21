@@ -5,7 +5,7 @@ import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
-import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
+import { usePayInfoContext } from "../../../order/components/pay-contents/context/PayInfoProvider";
 
 function CouponApplyButton({
   onClose,

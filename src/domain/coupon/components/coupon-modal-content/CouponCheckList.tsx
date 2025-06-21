@@ -8,7 +8,7 @@ import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
 import { calculateOrders } from "../../../order/utils/calculateOrders";
 import { isCouponAvailable } from "../../utils/couponValidation";
 import { getCouponDetails } from "../../utils/getCouponDetails";
-import { usePayInfoContext } from "../../../../pages/order-confirm/context/PayInfoProvider";
+import { usePayInfoContext } from "../../../order/components/pay-contents/context/PayInfoProvider";
 
 function CouponCheckList({
   couponsResource,

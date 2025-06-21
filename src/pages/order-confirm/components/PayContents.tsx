@@ -3,7 +3,7 @@ import { Flex } from "../../../components/common";
 import CouponModalButton from "../../../domain/order/components/pay-contents/CouponModalButton";
 import DeliveryInfo from "../../../domain/order/components/pay-contents/DeliveryInfo";
 import PayButton from "../../../domain/order/components/pay-contents/PayButton";
-import { PayInfoProvider } from "../context/PayInfoProvider";
+import { PayInfoProvider } from "../../../domain/order/components/pay-contents/context/PayInfoProvider";
 
 function PayContents() {
   return (
