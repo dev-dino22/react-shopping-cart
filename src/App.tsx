@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { MobileLayout } from "./components";
 import { ScrollToTopOnRouteChange } from "./components/layout/ScrollToTopOnRouteChange";
-import { APIDataProvider } from "./context/APIDataProvider";
 import { ToastProvider } from "./context/ToastProvider";
 import ErrorBoundary from "./domain/error-boundary/ErrorBoundary";
 import OrderConfirmPage from "./pages/order-confirm/OrderConfirmPage";
@@ -19,33 +18,31 @@ function App() {
       <Global styles={reset} />
       <MobileLayout>
         <ToastProvider>
-          <APIDataProvider>
-            <BrowserRouter basename={getBrowserBaseUrl()}>
-              <ScrollToTopOnRouteChange />
-              <Routes>
-                <Route element={<CartOrderRoute />}>
-                  <Route path="/" element={<ShoppingCartPage />} />
-                  <Route path="/order-confirm" element={<OrderConfirmPage />} />
-                </Route>
-                <Route
-                  path="*"
-                  element={
-                    <div>
-                      <h1>Page Not Found</h1>
-                    </div>
-                  }
-                />
-                <Route
-                  path="/success-confirm"
-                  element={
-                    <ErrorBoundary>
-                      <SuccessConfirmPage />
-                    </ErrorBoundary>
-                  }
-                />
-              </Routes>
-            </BrowserRouter>
-          </APIDataProvider>
+          <BrowserRouter basename={getBrowserBaseUrl()}>
+            <ScrollToTopOnRouteChange />
+            <Routes>
+              <Route element={<CartOrderRoute />}>
+                <Route path="/" element={<ShoppingCartPage />} />
+                <Route path="/order-confirm" element={<OrderConfirmPage />} />
+              </Route>
+              <Route
+                path="*"
+                element={
+                  <div>
+                    <h1>Page Not Found</h1>
+                  </div>
+                }
+              />
+              <Route
+                path="/success-confirm"
+                element={
+                  <ErrorBoundary>
+                    <SuccessConfirmPage />
+                  </ErrorBoundary>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
         </ToastProvider>
       </MobileLayout>
     </>
