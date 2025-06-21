@@ -8,14 +8,7 @@ import {
 } from "react";
 import { uniqueIdentifier } from "../api/UniqueIdentifier";
 
-type APIStateMap = Record<
-  string,
-  {
-    data?: unknown;
-    loading: boolean;
-    error: unknown;
-  }
->;
+type APIStateMap = Record<string, unknown>;
 
 const APIContext = createContext<{
   state: APIStateMap;
@@ -47,22 +40,13 @@ export function useAPIDataContext<T>({
   const request = useCallback(async () => {
     uniqueIdentifier.add(name);
 
-    setState((prev) => ({
-      ...prev,
-      [name]: { ...prev[name], loading: true, error: null },
-    }));
-
     try {
       const result = await fetcher();
       setState((prev) => ({
         ...prev,
-        [name]: { data: result, loading: false, error: null },
+        [name]: result,
       }));
     } catch (e) {
-      setState((prev) => ({
-        ...prev,
-        [name]: { ...prev[name], loading: false, error: e },
-      }));
       throw new Error("데이터 요청 실패");
     }
   }, [name, setState, state]);
@@ -72,15 +56,13 @@ export function useAPIDataContext<T>({
       return;
     }
 
-    if (!state[name]?.data && !state[name]?.loading) {
+    if (!state[name]) {
       request();
     }
   }, [name]);
 
   return {
-    data: state[name]?.data as T | undefined,
-    loading: state[name]?.loading ?? false,
-    error: state[name]?.error,
+    data: state[name] as T | undefined,
     refetch: request,
   };
 }
