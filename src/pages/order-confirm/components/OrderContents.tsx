@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import OrderInfoTitle from "../../../domain/order/components/order-contents/OrderInfoTitle";
 import OrderList from "../../../domain/order/components/order-contents/OrderList";
-import { Flex } from "../../../components/common";
+import { Flex } from "../../../components";
 
 function OrderContents() {
   return (

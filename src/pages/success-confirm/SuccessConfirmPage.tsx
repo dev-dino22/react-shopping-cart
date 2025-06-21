@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Flex, Header } from "../../components/common";
+import { Flex, Header } from "../../components";
 import { formatKRWString } from "../../utils/formatKRWString";
 import { useEffect } from "react";
 

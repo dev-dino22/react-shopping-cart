@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import Flex from "../styled/Flex";
-import { formatKRWString } from "../../../utils/formatKRWString";
+import { formatKRWString } from "../../utils/formatKRWString";
 
 interface LabelPriceProps {
   label: string;

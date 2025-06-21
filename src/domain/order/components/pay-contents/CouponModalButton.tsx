@@ -1,5 +1,5 @@
 import { BasicModal } from "@dev-dino22/modal-components";
-import Button from "../../../../components/common/inputs/Button";
+import Button from "../../../../components/inputs/Button";
 import { useBoolean } from "../../../../hooks/useBoolean";
 import CouponModalContent from "../../../coupon/components/coupon-modal-content/CouponModalContent";
 

@@ -6,7 +6,7 @@ import {
   useContext,
   useMemo,
 } from "react";
-import ToastMessage from "../components/common/toast/ToastMessage";
+import ToastMessage from "../components/toast/ToastMessage";
 
 type ToastType = "error" | "info";
 
