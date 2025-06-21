@@ -1,0 +1,51 @@
+import styled from "@emotion/styled";
+import Flex from "../../../../components/styled/Flex";
+import InfoText from "../../../../components/text/InfoText";
+import LabelPrice from "../../../../components/text/LabelPrice";
+import { formatKRWString } from "../../../../utils/formatKRWString";
+import { FREE_SHIPPING_STANDARD } from "../../../order/consts/OrderConstants";
+import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
+import { calculateOrders } from "../../../order/utils/calculateOrders";
+
+const LabelPriceContainer = () => {
+  const { selectedCartData } = useOrderCartList();
+
+  const { shippingFee, totalPrice, totalCartPrice } =
+    calculateOrders(selectedCartData).getBasicOrderPrice();
+
+  const InfoTextContent = ` 총 주문 금액이 ${formatKRWString(
+    FREE_SHIPPING_STANDARD
+  )} 이상일 경우
+          무료 배송됩니다.`;
+
+  return (
+    <Container>
+      <InfoText contentText={InfoTextContent} />
+      <PriceWrapper>
+        <LabelPrice label="주문 금액" price={totalCartPrice} />
+        <LabelPrice
+          ariaLabel="shipping-fee"
+          label="배송비"
+          price={shippingFee}
+        />
+      </PriceWrapper>
+
+      <LabelPrice label="총 결제 금액" price={totalPrice} />
+    </Container>
+  );
+};
+
+export default LabelPriceContainer;
+
+const Container = styled(Flex)`
+  flex-direction: column;
+  gap: 20px;
+  height: 180px;
+`;
+
+const PriceWrapper = styled(Flex)`
+  border-top: 1px solid grey;
+  border-bottom: 1px solid grey;
+  padding: 16px 0;
+  gap: 16px;
+`;

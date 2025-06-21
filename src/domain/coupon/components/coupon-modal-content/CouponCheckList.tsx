@@ -1,0 +1,77 @@
+import styled from "@emotion/styled";
+import { use, useEffect, useRef } from "react";
+import { Coupon } from "../../../../api/coupon";
+import CouponCheckItem from "../../../../components/coupon/CouponCheckItem";
+import { useToastContext } from "../../../../context/ToastProvider";
+import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
+import { useOrderCartList } from "../../../order/hooks/useOrderCartList";
+import { calculateOrders } from "../../../order/utils/calculateOrders";
+import { isCouponAvailable } from "../../utils/couponValidation";
+import { getCouponDetails } from "../../utils/getCouponDetails";
+import { usePayInfoContext } from "../../../order/components/pay-contents/context/PayInfoProvider";
+
+function CouponCheckList({
+  couponsResource,
+}: {
+  couponsResource: Promise<Coupon[]>;
+}) {
+  const coupons = use(couponsResource);
+  const { selectedCartData } = useOrderCartList();
+  const hasShownToast = useRef(false);
+  const { payInfo } = usePayInfoContext();
+
+  const { totalCartPrice, shippingFee } = calculateOrders(
+    selectedCartData
+  ).getBasicOrderPrice(payInfo.isIsland);
+
+  const { initializeCoupons } = useCouponContext();
+  const { showToast } = useToastContext();
+
+  useEffect(() => {
+    if (!hasShownToast.current) {
+      const hasSelectedCoupons = initializeCoupons(
+        coupons,
+        totalCartPrice,
+        shippingFee,
+        selectedCartData
+      );
+
+      if (hasSelectedCoupons) {
+        showToast("최적의 쿠폰이 자동으로 선택되었습니다.", "info");
+        hasShownToast.current = true;
+      }
+    }
+  }, [coupons]);
+
+  return (
+    <>
+      <Container>
+        {(coupons ?? []).map((coupon) => {
+          const isAvailable = isCouponAvailable(
+            coupon,
+            totalCartPrice,
+            selectedCartData
+          );
+          return (
+            <CouponCheckItem
+              key={coupon.id}
+              coupon={coupon}
+              details={getCouponDetails(coupon)}
+              disabled={!isAvailable}
+            />
+          );
+        })}
+      </Container>
+    </>
+  );
+}
+
+export default CouponCheckList;
+
+const Container = styled.ul`
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #e0e0e0;
+  max-height: 400px;
+  overflow: auto;
+`;

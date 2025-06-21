@@ -1,15 +1,16 @@
 import { Global } from "@emotion/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
-import { MobileLayout } from "./components/common";
-import { APIDataProvider } from "./context/APIDataProvider";
+import { MobileLayout } from "./components";
+import { ScrollToTopOnRouteChange } from "./components/layout/ScrollToTopOnRouteChange";
 import { ToastProvider } from "./context/ToastProvider";
-import reset from "./global/style/reset";
+import ErrorBoundary from "./domain/error-boundary/ErrorBoundary";
 import OrderConfirmPage from "./pages/order-confirm/OrderConfirmPage";
-import { OrderListProvider } from "./pages/shopping-cart/context/OrderListProvider";
 import ShoppingCartPage from "./pages/shopping-cart/ShoppingCartPage";
+import SuccessConfirmPage from "./pages/success-confirm/SuccessConfirmPage";
+import { CartOrderRoute } from "./routes/CartOrderRoute";
+import reset from "./style/reset";
 import { getBrowserBaseUrl } from "./utils/getBrowserBaseUrl";
-import ErrorBoundary from "./components/features/error-boundary/ErrorBoundary";
 
 function App() {
   return (
@@ -17,39 +18,31 @@ function App() {
       <Global styles={reset} />
       <MobileLayout>
         <ToastProvider>
-          <APIDataProvider>
-            <OrderListProvider>
-              <BrowserRouter basename={getBrowserBaseUrl()}>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      <ErrorBoundary>
-                        <ShoppingCartPage />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="/order-confirm"
-                    element={
-                      <ErrorBoundary>
-                        {" "}
-                        <OrderConfirmPage />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="*"
-                    element={
-                      <div>
-                        <h1>Page Not Found</h1>
-                      </div>
-                    }
-                  />
-                </Routes>
-              </BrowserRouter>
-            </OrderListProvider>
-          </APIDataProvider>
+          <BrowserRouter basename={getBrowserBaseUrl()}>
+            <ScrollToTopOnRouteChange />
+            <Routes>
+              <Route element={<CartOrderRoute />}>
+                <Route path="/" element={<ShoppingCartPage />} />
+                <Route path="/order-confirm" element={<OrderConfirmPage />} />
+              </Route>
+              <Route
+                path="*"
+                element={
+                  <div>
+                    <h1>Page Not Found</h1>
+                  </div>
+                }
+              />
+              <Route
+                path="/success-confirm"
+                element={
+                  <ErrorBoundary>
+                    <SuccessConfirmPage />
+                  </ErrorBoundary>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
         </ToastProvider>
       </MobileLayout>
     </>
