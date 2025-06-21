@@ -3,13 +3,13 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { MobileLayout } from "./components";
 import { ScrollToTopOnRouteChange } from "./components/layout/ScrollToTopOnRouteChange";
-import ErrorBoundary from "./domain/error-boundary/ErrorBoundary";
 import { APIDataProvider } from "./context/APIDataProvider";
 import { ToastProvider } from "./context/ToastProvider";
-import { SelectedCartIdsProvider } from "./domain/order/context/SelectedCartIdsProvider";
+import ErrorBoundary from "./domain/error-boundary/ErrorBoundary";
 import OrderConfirmPage from "./pages/order-confirm/OrderConfirmPage";
 import ShoppingCartPage from "./pages/shopping-cart/ShoppingCartPage";
 import SuccessConfirmPage from "./pages/success-confirm/SuccessConfirmPage";
+import { CartOrderRoute } from "./routes/CartOrderRoute";
 import reset from "./style/reset";
 import { getBrowserBaseUrl } from "./utils/getBrowserBaseUrl";
 
@@ -23,26 +23,10 @@ function App() {
             <BrowserRouter basename={getBrowserBaseUrl()}>
               <ScrollToTopOnRouteChange />
               <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <SelectedCartIdsProvider>
-                      <ErrorBoundary>
-                        <ShoppingCartPage />
-                      </ErrorBoundary>
-                    </SelectedCartIdsProvider>
-                  }
-                />
-                <Route
-                  path="/order-confirm"
-                  element={
-                    <SelectedCartIdsProvider>
-                      <ErrorBoundary>
-                        <OrderConfirmPage />
-                      </ErrorBoundary>
-                    </SelectedCartIdsProvider>
-                  }
-                />
+                <Route element={<CartOrderRoute />}>
+                  <Route path="/" element={<ShoppingCartPage />} />
+                  <Route path="/order-confirm" element={<OrderConfirmPage />} />
+                </Route>
                 <Route
                   path="*"
                   element={
