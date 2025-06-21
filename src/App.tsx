@@ -1,8 +1,8 @@
 import { Global } from "@emotion/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
-import { MobileLayout } from "./components/common";
-import { ScrollToTopOnRouteChange } from "./components/common/layout/ScrollToTopOnRouteChange";
+import { MobileLayout } from "./components";
+import { ScrollToTopOnRouteChange } from "./components/layout/ScrollToTopOnRouteChange";
 import ErrorBoundary from "./domain/error-boundary/ErrorBoundary";
 import { APIDataProvider } from "./context/APIDataProvider";
 import { ToastProvider } from "./context/ToastProvider";

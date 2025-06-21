@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { use, useEffect, useRef } from "react";
 import { Coupon } from "../../../../api/coupon";
-import CouponCheckItem from "../../../../components/common/coupon/CouponCheckItem";
+import CouponCheckItem from "../../../../components/coupon/CouponCheckItem";
 import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../../order/hooks/useOrderCartList";

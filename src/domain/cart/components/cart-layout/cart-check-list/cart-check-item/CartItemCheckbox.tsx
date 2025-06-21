@@ -1,4 +1,4 @@
-import CheckBox from "../../../../../../components/common/inputs/CheckBox";
+import CheckBox from "../../../../../../components/inputs/CheckBox";
 import { useOrderCartList } from "../../../../../order/hooks/useOrderCartList";
 
 function CartItemCheckbox({ cartId }: { cartId: string }) {

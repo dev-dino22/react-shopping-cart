@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Cart, deleteCartItem } from "../../../../../../api/cart";
-import Image from "../../../../../../components/common/assets/Image";
+import Image from "../../../../../../components/assets/Image";
 import { useToastContext } from "../../../../../../context/ToastProvider";
 import { formatKRWString } from "../../../../../../utils/formatKRWString";
 import { useCartAPIData } from "../../../../hooks/useCartAPIData";

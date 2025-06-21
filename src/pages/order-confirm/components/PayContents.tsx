@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Flex } from "../../../components/common";
+import { Flex } from "../../../components";
 import CouponModalButton from "../../../domain/order/components/pay-contents/CouponModalButton";
 import DeliveryInfo from "../../../domain/order/components/pay-contents/DeliveryInfo";
 import PayButton from "../../../domain/order/components/pay-contents/PayButton";

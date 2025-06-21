@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
-import Flex from "../../../../components/common/styled/Flex";
-import InfoText from "../../../../components/common/text/InfoText";
-import LabelPrice from "../../../../components/common/text/LabelPrice";
+import Flex from "../../../../components/styled/Flex";
+import InfoText from "../../../../components/text/InfoText";
+import LabelPrice from "../../../../components/text/LabelPrice";
 import { formatKRWString } from "../../../../utils/formatKRWString";
 import { FREE_SHIPPING_STANDARD } from "../../../order/consts/OrderConstants";
 import { useOrderCartList } from "../../../order/hooks/useOrderCartList";

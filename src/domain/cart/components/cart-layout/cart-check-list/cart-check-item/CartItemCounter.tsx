@@ -1,5 +1,5 @@
 import { Cart, patchCartItem } from "../../../../../../api/cart";
-import Counter from "../../../../../../components/common/inputs/Counter";
+import Counter from "../../../../../../components/inputs/Counter";
 import { useToastContext } from "../../../../../../context/ToastProvider";
 import { useOrderCartList } from "../../../../../order/hooks/useOrderCartList";
 

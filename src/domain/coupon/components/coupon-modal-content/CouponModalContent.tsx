@@ -1,8 +1,8 @@
 import styled from "@emotion/styled";
 import { Suspense } from "react";
 import { getCouponData } from "../../../../api/coupon";
-import { Loading } from "../../../../components/common";
-import InfoText from "../../../../components/common/text/InfoText";
+import { Loading } from "../../../../components";
+import InfoText from "../../../../components/text/InfoText";
 import CouponApplyButton from "./CouponApplyButton";
 import CouponCheckList from "./CouponCheckList";
 

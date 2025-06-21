@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router-dom";
-import { Header } from "../../components/common";
+import { Header } from "../../components";
 import CartLayout from "../../domain/cart/components/cart-layout/CartLayout";
 import { useOrderCartList } from "../../domain/order/hooks/useOrderCartList";
 

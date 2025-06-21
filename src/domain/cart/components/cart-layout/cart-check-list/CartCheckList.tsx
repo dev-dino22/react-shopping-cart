@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import CheckBox from "../../../../../components/common/inputs/CheckBox";
+import CheckBox from "../../../../../components/inputs/CheckBox";
 import { useOrderCartList } from "../../../../order/hooks/useOrderCartList";
 import EmptyCartBox from "./EmptyCartBox";
 import CartCheckItem from "./cart-check-item/CartCheckItem";

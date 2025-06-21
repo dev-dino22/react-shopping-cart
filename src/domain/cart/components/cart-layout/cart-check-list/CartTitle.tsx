@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Flex } from "../../../../../components/common";
+import { Flex } from "../../../../../components";
 import { useCartAPIData } from "../../../hooks/useCartAPIData";
 
 const CartTitle = () => {

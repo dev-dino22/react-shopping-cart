@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Coupon } from "../../../../api/coupon";
-import Button from "../../../../components/common/inputs/Button";
+import Button from "../../../../components/inputs/Button";
 import { useToastContext } from "../../../../context/ToastProvider";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../../order/hooks/useOrderCartList";

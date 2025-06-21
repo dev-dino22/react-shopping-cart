@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Header } from "../../components/common";
-import BackArrowButton from "../../components/common/assets/BackArrowButton";
+import { Header } from "../../components";
+import BackArrowButton from "../../components/assets/BackArrowButton";
 import OrderContents from "./components/OrderContents";
 import PayContents from "./components/PayContents";
 import { CouponProvider } from "./context/CouponProvider";

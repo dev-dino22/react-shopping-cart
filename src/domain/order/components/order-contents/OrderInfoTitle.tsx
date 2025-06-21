@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Flex } from "../../../../components/common";
+import { Flex } from "../../../../components";
 import { useCouponContext } from "../../../../pages/order-confirm/context/CouponProvider";
 import { useOrderCartList } from "../../hooks/useOrderCartList";
 import { calculateOrders } from "../../utils/calculateOrders";

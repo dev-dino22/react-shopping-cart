@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import Image from "../../../../components/common/assets/Image";
+import Image from "../../../../components/assets/Image";
 import { formatKRWString } from "../../../../utils/formatKRWString";
 import { useOrderCartList } from "../../hooks/useOrderCartList";
 
